@@ -112,16 +112,7 @@ Expected result:
 
 ## 10. Install Systemd Services
 
-Copy the service files:
-
-```bash
-sudo cp brain/deploy/systemd/triage-brain-camera.service /etc/systemd/system/
-sudo cp brain/deploy/systemd/triage-brain-app.service /etc/systemd/system/
-```
-
-If your username is not `pi`, edit both files before copying and replace `/home/pi/TRIAGE-brain` and `User=pi`.
-
-Reload and enable:
+Install and render the services for the current user automatically:
 
 ```bash
 bash brain/scripts/install-services.sh

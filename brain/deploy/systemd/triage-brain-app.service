@@ -5,10 +5,10 @@ Wants=triage-brain-camera.service
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/TRIAGE-brain
-EnvironmentFile=/home/pi/TRIAGE-brain/.env
-ExecStart=/usr/bin/node /home/pi/TRIAGE-brain/brain/server/index.js
+User=__TRIAGE_USER__
+WorkingDirectory=__TRIAGE_ROOT__
+EnvironmentFile=__TRIAGE_ROOT__/.env
+ExecStart=/usr/bin/node __TRIAGE_ROOT__/brain/server/index.js
 Restart=always
 RestartSec=2
 

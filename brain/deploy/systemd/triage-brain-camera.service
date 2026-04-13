@@ -4,10 +4,10 @@ After=network.target
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/TRIAGE-brain
-EnvironmentFile=/home/pi/TRIAGE-brain/.env
-ExecStart=/usr/bin/python3 /home/pi/TRIAGE-brain/brain/camera/camera.py
+User=__TRIAGE_USER__
+WorkingDirectory=__TRIAGE_ROOT__
+EnvironmentFile=__TRIAGE_ROOT__/.env
+ExecStart=/usr/bin/python3 __TRIAGE_ROOT__/brain/camera/camera.py
 Restart=always
 RestartSec=2
 

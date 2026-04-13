@@ -1,0 +1,15 @@
+[Unit]
+Description=TRIAGE Brain Pi camera service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/TRIAGE-brain
+EnvironmentFile=/home/pi/TRIAGE-brain/.env
+ExecStart=/usr/bin/python3 /home/pi/TRIAGE-brain/brain/camera/camera.py
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

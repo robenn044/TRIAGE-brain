@@ -1,0 +1,16 @@
+[Unit]
+Description=TRIAGE Brain Pi app server
+After=network.target triage-brain-camera.service
+Wants=triage-brain-camera.service
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/TRIAGE-brain
+EnvironmentFile=/home/pi/TRIAGE-brain/.env
+ExecStart=/usr/bin/node /home/pi/TRIAGE-brain/brain/server/index.js
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

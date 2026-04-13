@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="triage-bg" x1="18" y1="14" x2="110" y2="114" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9EE8FF"/>
+      <stop offset="1" stop-color="#20A7DB"/>
+    </linearGradient>
+    <linearGradient id="triage-core" x1="64" y1="34" x2="64" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAFBFF"/>
+    </linearGradient>
+  </defs>
+  <rect x="10" y="10" width="108" height="108" rx="30" fill="url(#triage-bg)"/>
+  <circle cx="64" cy="64" r="33" fill="white" fill-opacity="0.16"/>
+  <path d="M64 31C49.6 31 38 42.6 38 57C38 75.5 57.5 95.2 62 99.4C63.1 100.5 64.9 100.5 66 99.4C70.5 95.2 90 75.5 90 57C90 42.6 78.4 31 64 31Z" fill="url(#triage-core)"/>
+  <circle cx="64" cy="57" r="11" fill="#20A7DB"/>
+  <path d="M92 23L95.6 31.4L104 35L95.6 38.6L92 47L88.4 38.6L80 35L88.4 31.4L92 23Z" fill="#D7F7FF"/>
+  <path d="M33 79C36.7 83.6 41.2 87.7 46.2 91.1" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-opacity="0.55"/>
+</svg>

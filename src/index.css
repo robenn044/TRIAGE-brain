@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 204 20% 97%;
+    --foreground: 210 22% 17%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 22% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 22% 17%;
+
+    --primary: 197 85% 49%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 204 20% 94%;
+    --secondary-foreground: 210 22% 22%;
+
+    --muted: 204 15% 93%;
+    --muted-foreground: 210 12% 48%;
+
+    --accent: 204 20% 94%;
+    --accent-foreground: 210 22% 17%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 204 20% 88%;
+    --input: 204 20% 88%;
+    --ring: 197 85% 49%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 204 20% 97%;
+    --sidebar-foreground: 210 22% 17%;
+    --sidebar-primary: 197 85% 49%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 204 20% 94%;
+    --sidebar-accent-foreground: 210 22% 17%;
+    --sidebar-border: 204 20% 88%;
+    --sidebar-ring: 197 85% 49%;
+  }
+
+  .dark {
+    --background: 210 22% 12%;
+    --foreground: 195 100% 94%;
+    --card: 210 22% 16%;
+    --card-foreground: 195 100% 94%;
+    --popover: 210 22% 14%;
+    --popover-foreground: 195 100% 94%;
+    --primary: 204 96% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 199 92% 60%;
+    --secondary-foreground: 210 22% 17%;
+    --muted: 210 18% 22%;
+    --muted-foreground: 199 40% 65%;
+    --accent: 195 100% 94%;
+    --accent-foreground: 210 22% 17%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 18% 28%;
+    --input: 210 18% 28%;
+    --ring: 204 96% 40%;
+    --sidebar-background: 210 22% 10%;
+    --sidebar-foreground: 195 100% 94%;
+    --sidebar-primary: 204 96% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 18% 22%;
+    --sidebar-accent-foreground: 195 100% 94%;
+    --sidebar-border: 210 18% 28%;
+    --sidebar-ring: 204 96% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}

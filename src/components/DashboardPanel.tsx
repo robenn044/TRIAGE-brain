@@ -782,44 +782,44 @@ export default function DashboardPanel() {
   }, [cameraError, cameraReady, lastAnswer, micError, micEnabled, micPermissionGranted, state, transcript])
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[#f4fbfe]">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#f4fbfe]">
       <div
         className="pointer-events-none fixed inset-0 z-50 bg-[#20a7db]"
         style={{ opacity: entered ? 0 : 1, transition: 'opacity 800ms cubic-bezier(0.4,0,0.2,1)' }}
       />
 
       <header className="shrink-0 bg-[#20a7db]">
-        <div className="mx-auto flex w-full items-center gap-2 px-3 py-1.5">
+        <div className="mx-auto flex w-full items-center gap-2 px-2.5 py-1.5 max-[820px]:gap-1.5 max-[820px]:px-2 max-[820px]:py-1">
           <div className="shrink-0">
-            <TriageMark className="h-9 w-9" decorative />
+            <TriageMark className="h-9 w-9 max-[820px]:h-7 max-[820px]:w-7" decorative />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xs font-semibold leading-tight tracking-tight text-white">Triage</h1>
-            <p className="text-[10px] leading-tight text-white/70">Brain Pi dashboard + local camera stream</p>
+            <h1 className="text-xs font-semibold leading-tight tracking-tight text-white max-[820px]:text-[11px]">Triage</h1>
+            <p className="text-[10px] leading-tight text-white/70 max-[820px]:text-[9px]">Brain Pi dashboard + local camera stream</p>
           </div>
-          <div className="ml-auto shrink-0 rounded-full bg-white/[0.12] px-2 py-0.5 text-[10px] font-medium text-white/80 ring-1 ring-white/[0.15]">
+          <div className="ml-auto shrink-0 rounded-full bg-white/[0.12] px-2 py-0.5 text-[10px] font-medium text-white/80 ring-1 ring-white/[0.15] max-[820px]:px-1.5 max-[820px]:text-[9px]">
             {statusText}
           </div>
           <EndTripButton />
         </div>
       </header>
 
-      <main className="flex w-full min-h-0 flex-1 gap-3 p-2.5">
-        <section className="flex min-h-0 flex-1 flex-col rounded-2xl border border-[#20a7db]/[0.12] bg-white p-3 shadow-[0_20px_48px_rgba(32,167,219,0.07)]">
-          <div className="flex shrink-0 items-center justify-between gap-2">
+      <main className="flex w-full min-h-0 flex-1 gap-2 p-2 max-[820px]:gap-1.5 max-[820px]:p-1.5">
+        <section className="flex min-h-0 flex-1 flex-col rounded-[22px] border border-[#20a7db]/[0.12] bg-white p-2.5 shadow-[0_20px_48px_rgba(32,167,219,0.07)] max-[820px]:rounded-[18px] max-[820px]:p-2">
+          <div className="flex shrink-0 items-center justify-between gap-2 max-[820px]:gap-1.5">
             <div className="min-w-0">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#20a7db]">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] max-[820px]:text-[8px] max-[820px]:tracking-[0.18em]">
                 Brain Pi
               </p>
-              <h2 className="mt-0.5 text-sm font-semibold leading-tight tracking-tight text-slate-900">
+              <h2 className="mt-0.5 text-sm font-semibold leading-tight tracking-tight text-slate-900 max-[820px]:text-[13px]">
                 Local dashboard with live USB camera context
               </h2>
             </div>
-            <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#20a7db]/[0.12] bg-[#f4fbfe] p-1">
+            <div className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#20a7db]/[0.12] bg-[#f4fbfe] p-1 max-[820px]:gap-0.5 max-[820px]:p-0.5">
               <Button
                 onClick={handleMicrophoneButton}
                 size="lg"
-                className={`h-9 w-9 rounded-full p-0 shadow-sm ${
+                className={`h-9 w-9 rounded-full p-0 shadow-sm max-[820px]:h-8 max-[820px]:w-8 ${
                   micEnabled
                     ? 'bg-[#20a7db] shadow-[#20a7db]/25 hover:bg-[#1b96c5]'
                     : 'bg-red-500 shadow-red-500/25 hover:bg-red-600'
@@ -837,7 +837,7 @@ export default function DashboardPanel() {
                 onClick={() => void checkCameraHealth()}
                 size="lg"
                 variant="outline"
-                className="h-8 w-8 rounded-full border-[#20a7db]/30 bg-white p-0 text-[#20a7db] hover:bg-[#20a7db]/5"
+                className="h-8 w-8 rounded-full border-[#20a7db]/30 bg-white p-0 text-[#20a7db] hover:bg-[#20a7db]/5 max-[820px]:h-7 max-[820px]:w-7"
               >
                 {checkingCamera ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCcw className="h-3.5 w-3.5" />}
               </Button>
@@ -845,7 +845,7 @@ export default function DashboardPanel() {
                 onClick={() => navigate('/itinerary')}
                 size="lg"
                 variant="outline"
-                className="h-8 w-8 rounded-full border-[#20a7db]/30 bg-white p-0 text-[#20a7db] hover:bg-[#20a7db]/5"
+                className="h-8 w-8 rounded-full border-[#20a7db]/30 bg-white p-0 text-[#20a7db] hover:bg-[#20a7db]/5 max-[820px]:h-7 max-[820px]:w-7"
               >
                 <Map className="h-3.5 w-3.5" />
               </Button>
@@ -853,20 +853,20 @@ export default function DashboardPanel() {
                 onClick={() => navigate('/maps')}
                 size="lg"
                 variant="outline"
-                className="h-8 w-8 rounded-full border-[#20a7db]/30 bg-white p-0 text-[#20a7db] hover:bg-[#20a7db]/5"
+                className="h-8 w-8 rounded-full border-[#20a7db]/30 bg-white p-0 text-[#20a7db] hover:bg-[#20a7db]/5 max-[820px]:h-7 max-[820px]:w-7"
               >
                 <MapPin className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
 
-          <div className="relative mt-2 min-h-0 flex-1 overflow-hidden rounded-xl border border-[#20a7db]/[0.12] bg-black">
+          <div className="relative mt-2 min-h-0 flex-1 overflow-hidden rounded-[18px] border border-[#20a7db]/[0.12] bg-black max-[820px]:mt-1.5 max-[820px]:rounded-[15px]">
             <div className="pointer-events-none absolute left-2 top-2 z-10 h-5 w-5 rounded-tl-lg border-l-2 border-t-2 border-white/40" />
             <div className="pointer-events-none absolute right-2 top-2 z-10 h-5 w-5 rounded-tr-lg border-r-2 border-t-2 border-white/40" />
             <div className="pointer-events-none absolute bottom-2 left-2 z-10 h-5 w-5 rounded-bl-lg border-b-2 border-l-2 border-white/40" />
             <div className="pointer-events-none absolute bottom-2 right-2 z-10 h-5 w-5 rounded-br-lg border-b-2 border-r-2 border-white/40" />
 
-            <div className="absolute left-2 top-2 z-20 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white shadow-sm backdrop-blur-sm">
+            <div className="absolute left-2 top-2 z-20 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white shadow-sm backdrop-blur-sm max-[820px]:left-1.5 max-[820px]:top-1.5 max-[820px]:px-1.5 max-[820px]:text-[9px]">
               {cameraReady ? 'Live local stream' : checkingCamera ? 'Checking stream...' : 'Stream offline'}
             </div>
 
@@ -889,37 +889,37 @@ export default function DashboardPanel() {
             />
 
             {!cameraReady && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-[radial-gradient(circle_at_top,rgba(32,167,219,0.22),transparent_34%),linear-gradient(135deg,rgba(11,23,36,0.94),rgba(5,10,18,1))] p-4">
-                <div className="w-full max-w-[520px] rounded-3xl border border-white/10 bg-white/[0.08] p-6 text-white shadow-[0_18px_48px_rgba(0,0,0,0.35)] backdrop-blur-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-[#7fd4ef]">
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-[radial-gradient(circle_at_top,rgba(32,167,219,0.22),transparent_34%),linear-gradient(135deg,rgba(11,23,36,0.94),rgba(5,10,18,1))] p-3 max-[820px]:p-2">
+                <div className="w-full max-w-[470px] rounded-[28px] border border-white/10 bg-white/[0.08] p-5 text-white shadow-[0_18px_48px_rgba(0,0,0,0.35)] backdrop-blur-sm max-[820px]:max-w-[390px] max-[820px]:rounded-[22px] max-[820px]:p-4">
+                  <div className="flex items-start gap-3 max-[820px]:gap-2">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-[#7fd4ef] max-[820px]:h-10 max-[820px]:w-10 max-[820px]:rounded-[18px]">
                       {checkingCamera ? <Loader2 className="h-5 w-5 animate-spin" /> : <VideoOff className="h-5 w-5" />}
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7fd4ef]">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7fd4ef] max-[820px]:text-[8px] max-[820px]:tracking-[0.18em]">
                         Local camera
                       </p>
-                      <h3 className="mt-2 text-xl font-semibold tracking-tight">
+                      <h3 className="mt-2 text-xl font-semibold tracking-tight max-[820px]:mt-1.5 max-[820px]:text-lg">
                         Waiting for the Brain Pi camera stream.
                       </h3>
-                      <p className="mt-2 text-sm leading-6 text-white/75">
+                      <p className="mt-2 text-sm leading-6 text-white/75 max-[820px]:text-xs max-[820px]:leading-5">
                         This dashboard expects the local `camera.py` service to expose `/camera/stream` and `/api/camera/frame`. Once it is running, the preview will appear automatically.
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef]">Camera</p>
-                      <p className="mt-2 text-xs leading-5 text-white/70">USB camera feed served locally at 30fps by Brain Pi.</p>
+                  <div className="mt-4 grid gap-2.5 sm:grid-cols-3 max-[820px]:mt-3 max-[820px]:grid-cols-1">
+                    <div className="rounded-2xl border border-white/10 bg-black/20 p-3 max-[820px]:rounded-[18px] max-[820px]:p-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef] max-[820px]:text-[8px]">Camera</p>
+                      <p className="mt-2 text-xs leading-5 text-white/70 max-[820px]:mt-1 max-[820px]:leading-4">USB camera feed served locally at 30fps by Brain Pi.</p>
                     </div>
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef]">STT</p>
-                      <p className="mt-2 text-xs leading-5 text-white/70">Free English browser speech recognition after one Chrome mic permission prompt.</p>
+                    <div className="rounded-2xl border border-white/10 bg-black/20 p-3 max-[820px]:rounded-[18px] max-[820px]:p-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef] max-[820px]:text-[8px]">STT</p>
+                      <p className="mt-2 text-xs leading-5 text-white/70 max-[820px]:mt-1 max-[820px]:leading-4">Free English browser speech recognition after one Chrome mic permission prompt.</p>
                     </div>
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef]">TTS</p>
-                      <p className="mt-2 text-xs leading-5 text-white/70">Human English voice playback for clean Gemma 4 responses only.</p>
+                    <div className="rounded-2xl border border-white/10 bg-black/20 p-3 max-[820px]:rounded-[18px] max-[820px]:p-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef] max-[820px]:text-[8px]">TTS</p>
+                      <p className="mt-2 text-xs leading-5 text-white/70 max-[820px]:mt-1 max-[820px]:leading-4">Human English voice playback for clean Gemma 4 responses only.</p>
                     </div>
                   </div>
 
@@ -937,18 +937,18 @@ export default function DashboardPanel() {
                     </div>
                   )}
 
-                  <div className="mt-5 flex flex-wrap gap-2">
+                  <div className="mt-4 flex flex-wrap gap-2 max-[820px]:mt-3">
                     <Button
                       onClick={() => void checkCameraHealth()}
                       disabled={checkingCamera}
-                      className="h-10 bg-[#20a7db] px-5 text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5] disabled:opacity-60"
+                      className="h-10 bg-[#20a7db] px-5 text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5] disabled:opacity-60 max-[820px]:h-9 max-[820px]:px-4"
                     >
                       {checkingCamera ? 'Checking stream...' : 'Retry local camera'}
                     </Button>
                     <Button
                       onClick={handleMicrophoneButton}
                       variant="outline"
-                      className="h-10 border-white/15 bg-white/5 px-5 text-xs text-white hover:bg-white/10"
+                      className="h-10 border-white/15 bg-white/5 px-5 text-xs text-white hover:bg-white/10 max-[820px]:h-9 max-[820px]:px-4"
                     >
                       {micPermissionGranted ? 'Microphone ready' : 'Enable microphone'}
                     </Button>
@@ -959,24 +959,24 @@ export default function DashboardPanel() {
 
             {cameraReady && (
               <>
-                <div className="absolute right-2 top-2 z-20 flex items-center gap-2">
+                <div className="absolute right-2 top-2 z-20 flex items-center gap-1.5 max-[820px]:right-1.5 max-[820px]:top-1.5 max-[820px]:gap-1">
                   <div
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium shadow-sm backdrop-blur-sm ${
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium shadow-sm backdrop-blur-sm max-[820px]:px-1.5 max-[820px]:text-[9px] ${
                       micEnabled ? 'bg-[#20a7db]/85 text-white' : 'bg-black/55 text-white/80'
                     }`}
                   >
                     {micEnabled ? 'English STT live' : 'English STT paused'}
                   </div>
-                  <div className="rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white/80 shadow-sm backdrop-blur-sm">
+                  <div className="rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white/80 shadow-sm backdrop-blur-sm max-[820px]:px-1.5 max-[820px]:text-[9px]">
                     Gemma 4 + human English TTS
                   </div>
                 </div>
 
                 {!micEnabled && (
-                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-slate-950/90 to-transparent px-4 pb-4 pt-12">
-                    <div className="mx-auto max-w-[420px] rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-center backdrop-blur-sm">
-                      <p className="text-sm font-semibold text-white">Microphone is paused.</p>
-                      <p className="mt-1 text-xs leading-5 text-white/70">
+                  <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-slate-950/90 to-transparent px-3 pb-3 pt-10 max-[820px]:px-2 max-[820px]:pb-2 max-[820px]:pt-8">
+                    <div className="mx-auto max-w-[420px] rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-center backdrop-blur-sm max-[820px]:max-w-[320px] max-[820px]:rounded-[18px] max-[820px]:px-3 max-[820px]:py-2.5">
+                      <p className="text-sm font-semibold text-white max-[820px]:text-xs">Microphone is paused.</p>
+                      <p className="mt-1 text-xs leading-5 text-white/70 max-[820px]:leading-4">
                         Tap the mic button once to resume free English speech recognition in Chrome.
                       </p>
                     </div>
@@ -987,17 +987,17 @@ export default function DashboardPanel() {
 
             {state === 'processing' && (
               <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/35 backdrop-blur-sm">
-                <div className="rounded-2xl bg-white/90 px-6 py-4 text-center shadow-lg backdrop-blur">
-                  <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#20a7db]" />
+                <div className="rounded-2xl bg-white/90 px-6 py-4 text-center shadow-lg backdrop-blur max-[820px]:px-5 max-[820px]:py-3">
+                  <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#20a7db] max-[820px]:h-6 max-[820px]:w-6" />
                   <p className="mt-2 text-xs font-semibold text-slate-900">Analyzing with Gemma 4...</p>
                 </div>
               </div>
             )}
 
             {transcript && state !== 'idle' && (
-              <div className="absolute bottom-3 left-3 right-3 z-20">
-                <div className="rounded-xl bg-black/60 px-3 py-2 backdrop-blur-sm">
-                  <p className="text-xs leading-4 text-white/90">
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20 max-[820px]:bottom-2 max-[820px]:left-2 max-[820px]:right-2">
+                <div className="rounded-xl bg-black/60 px-3 py-2 backdrop-blur-sm max-[820px]:px-2.5 max-[820px]:py-1.5">
+                  <p className="text-xs leading-4 text-white/90 max-[820px]:text-[11px] max-[820px]:leading-4">
                     {state === 'listening' && 'Listening: '}
                     {state === 'processing' && 'Sending: '}
                     {transcript}
@@ -1007,72 +1007,72 @@ export default function DashboardPanel() {
             )}
           </div>
 
-          <div className="mt-2 shrink-0 rounded-xl bg-slate-900/85 px-4 py-2 backdrop-blur-sm">
-            <p className="text-center text-xs leading-5 text-white/90">{footerText}</p>
+          <div className="mt-2 shrink-0 rounded-xl bg-slate-900/85 px-3.5 py-2 backdrop-blur-sm max-[820px]:mt-1.5 max-[820px]:px-3 max-[820px]:py-1.5">
+            <p className="text-center text-xs leading-5 text-white/90 max-[820px]:text-[11px] max-[820px]:leading-4">{footerText}</p>
           </div>
         </section>
 
-        <aside className="flex w-[188px] shrink-0 flex-col rounded-2xl border border-[#20a7db]/[0.12] bg-[#eff9fd] p-3 shadow-sm">
-          <h3 className="text-sm font-semibold tracking-tight text-slate-900">Itinerary planner</h3>
-          <p className="mt-1 text-xs leading-4 text-slate-600">
+        <aside className="flex w-[172px] shrink-0 flex-col rounded-[22px] border border-[#20a7db]/[0.12] bg-[#eff9fd] p-2.5 shadow-sm max-[820px]:w-[158px] max-[820px]:rounded-[18px] max-[820px]:p-2">
+          <h3 className="text-sm font-semibold tracking-tight text-slate-900 max-[820px]:text-[13px]">Itinerary planner</h3>
+          <p className="mt-1 text-xs leading-4 text-slate-600 max-[820px]:text-[11px] max-[820px]:leading-4">
             Plan a city trip in Albania by answering a few quick questions.
           </p>
 
-          <div className="mt-3 rounded-2xl border border-[#20a7db]/10 bg-white/80 p-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#20a7db]/10 text-[#20a7db]">
+          <div className="mt-2.5 rounded-2xl border border-[#20a7db]/10 bg-white/80 p-2.5 max-[820px]:mt-2 max-[820px]:rounded-[18px] max-[820px]:p-2">
+            <div className="flex items-center gap-2 max-[820px]:gap-1.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#20a7db]/10 text-[#20a7db] max-[820px]:h-7 max-[820px]:w-7">
                 <Sparkles className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db]">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] max-[820px]:text-[8px] max-[820px]:tracking-[0.18em]">
                   Assistant stack
                 </p>
-                <p className="text-xs font-semibold text-slate-800">Brain Pi stream + Gemma 4 replies</p>
+                <p className="text-xs font-semibold text-slate-800 max-[820px]:text-[11px]">Brain Pi stream + Gemma 4 replies</p>
               </div>
             </div>
           </div>
 
-          <div className="mt-3 space-y-2">
+          <div className="mt-2.5 space-y-1.5 max-[820px]:mt-2 max-[820px]:space-y-1">
             {PLANNER_STEPS.map((item, index) => (
-              <div key={item} className="flex items-start gap-2">
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-semibold text-[#20a7db]">
+              <div key={item} className="flex items-start gap-1.5">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-semibold text-[#20a7db] max-[820px]:h-3.5 max-[820px]:w-3.5 max-[820px]:text-[9px]">
                   {index + 1}
                 </span>
-                <p className="text-xs leading-4 text-slate-600">{item}</p>
+                <p className="text-xs leading-4 text-slate-600 max-[820px]:text-[11px] max-[820px]:leading-4">{item}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-3 space-y-2">
-            <div className="rounded-xl border border-[#20a7db]/10 bg-white px-2.5 py-2">
+          <div className="mt-2.5 space-y-1.5 max-[820px]:mt-2 max-[820px]:space-y-1">
+            <div className="rounded-xl border border-[#20a7db]/10 bg-white px-2.5 py-2 max-[820px]:px-2 max-[820px]:py-1.5">
               <div className="flex items-center gap-2">
                 {cameraReady ? <Video className="h-3.5 w-3.5 text-[#20a7db]" /> : <VideoOff className="h-3.5 w-3.5 text-slate-400" />}
-                <p className="text-[10px] font-semibold text-slate-800">
+                <p className="text-[10px] font-semibold text-slate-800 max-[820px]:text-[9px]">
                   {cameraReady ? 'Camera live' : 'Camera offline'}
                 </p>
               </div>
             </div>
-            <div className="rounded-xl border border-[#20a7db]/10 bg-white px-2.5 py-2">
+            <div className="rounded-xl border border-[#20a7db]/10 bg-white px-2.5 py-2 max-[820px]:px-2 max-[820px]:py-1.5">
               <div className="flex items-center gap-2">
                 {micPermissionGranted ? <Mic className="h-3.5 w-3.5 text-[#20a7db]" /> : <MicOff className="h-3.5 w-3.5 text-slate-400" />}
-                <p className="text-[10px] font-semibold text-slate-800">
+                <p className="text-[10px] font-semibold text-slate-800 max-[820px]:text-[9px]">
                   {micPermissionGranted ? 'English STT ready' : 'Mic permission needed'}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="mt-auto grid gap-1.5 pt-3">
+          <div className="mt-auto grid gap-1.5 pt-2.5 max-[820px]:pt-2">
             <Button
               onClick={() => void checkCameraHealth()}
               variant="outline"
-              className="h-9 border-[#20a7db]/[0.18] bg-white text-xs"
+              className="h-9 border-[#20a7db]/[0.18] bg-white text-xs max-[820px]:h-8 max-[820px]:text-[11px]"
             >
               Retry camera
             </Button>
             <Button
               onClick={() => navigate('/itinerary')}
-              className="h-9 bg-[#20a7db] text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5]"
+              className="h-9 bg-[#20a7db] text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5] max-[820px]:h-8 max-[820px]:text-[11px]"
             >
               Open itinerary planner
             </Button>

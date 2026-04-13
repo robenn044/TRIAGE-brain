@@ -82,6 +82,8 @@
 
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   #root {

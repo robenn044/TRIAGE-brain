@@ -17,6 +17,7 @@ FPS = int(os.getenv("TRIAGE_CAMERA_FPS", "30"))
 JPEG_QUALITY = int(os.getenv("TRIAGE_CAMERA_JPEG_QUALITY", "85"))
 DEVICE_RAW = os.getenv("TRIAGE_CAMERA_DEVICE", "0")
 BOUNDARY = b"--frame\r\n"
+FOURCC_CANDIDATES = ("MJPG", "YUYV", None)
 
 
 def camera_device():
@@ -29,16 +30,50 @@ class CameraFeed:
         self._capture = None
         self._frame = None
         self._last_frame_at = 0.0
+        self._capture_mode = "uninitialized"
+        self._last_error = "Camera not opened yet"
+        self._open_attempts = 0
         self._running = True
         self._worker = threading.Thread(target=self._loop, daemon=True)
         self._worker.start()
 
     def _open_capture(self):
-        capture = cv2.VideoCapture(camera_device())
-        capture.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
-        capture.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
-        capture.set(cv2.CAP_PROP_FPS, FPS)
-        return capture
+        device = camera_device()
+        backend_candidates = []
+
+        if hasattr(cv2, "CAP_V4L2"):
+          backend_candidates.append(("CAP_V4L2", cv2.CAP_V4L2))
+        backend_candidates.append(("DEFAULT", None))
+
+        for backend_name, backend_value in backend_candidates:
+            for fourcc_name in FOURCC_CANDIDATES:
+                capture = (
+                    cv2.VideoCapture(device, backend_value)
+                    if backend_value is not None
+                    else cv2.VideoCapture(device)
+                )
+
+                if not capture.isOpened():
+                    capture.release()
+                    continue
+
+                capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                capture.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
+                capture.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
+                capture.set(cv2.CAP_PROP_FPS, FPS)
+
+                if fourcc_name:
+                    capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fourcc_name))
+
+                mode = f"{backend_name}:{fourcc_name or 'auto'}"
+                print(f"Camera opened using {mode} on device {DEVICE_RAW}", flush=True)
+                self._capture_mode = mode
+                self._last_error = ""
+                return capture
+
+        self._capture_mode = "unavailable"
+        self._last_error = f"Unable to open camera device {DEVICE_RAW}"
+        return None
 
     def _release_capture(self):
         if self._capture is not None:
@@ -51,25 +86,30 @@ class CameraFeed:
         while self._running:
             if self._capture is None or not self._capture.isOpened():
                 self._release_capture()
+                self._open_attempts += 1
                 self._capture = self._open_capture()
-                if not self._capture.isOpened():
+                if self._capture is None or not self._capture.isOpened():
                     time.sleep(1.0)
                     continue
 
             ok, frame = self._capture.read()
             if not ok or frame is None:
+                self._last_error = f"Camera read failed for {self._capture_mode}"
+                print(self._last_error, flush=True)
                 self._release_capture()
                 time.sleep(0.3)
                 continue
 
             success, encoded = cv2.imencode(".jpg", frame, encode_params)
             if not success:
+                self._last_error = "OpenCV failed to encode the captured frame as JPEG"
                 time.sleep(0.03)
                 continue
 
             with self._lock:
                 self._frame = encoded.tobytes()
                 self._last_frame_at = time.time()
+                self._last_error = ""
 
             time.sleep(max(0.0, (1.0 / FPS) - 0.001))
 
@@ -86,7 +126,10 @@ class CameraFeed:
             "width": WIDTH,
             "height": HEIGHT,
             "fps": FPS,
+            "capture_mode": self._capture_mode,
+            "open_attempts": self._open_attempts,
             "last_frame_age_ms": age_ms,
+            "last_error": self._last_error or None,
         }
 
     def stop(self):

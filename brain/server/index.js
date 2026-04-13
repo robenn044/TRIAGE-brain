@@ -1,9 +1,50 @@
 import { createServer } from 'node:http'
 import { Readable } from 'node:stream'
-import { createReadStream, existsSync } from 'node:fs'
+import { createReadStream, existsSync, readFileSync } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const rootDir = path.resolve(__dirname, '..', '..')
+const distDir = path.join(rootDir, 'dist')
+const envPath = path.join(rootDir, '.env')
+
+function loadEnvFile(filePath) {
+  if (!existsSync(filePath)) {
+    return
+  }
+
+  const contents = readFileSync(filePath, 'utf8')
+  for (const rawLine of contents.split(/\r?\n/)) {
+    const line = rawLine.trim()
+    if (!line || line.startsWith('#')) {
+      continue
+    }
+
+    const separatorIndex = line.indexOf('=')
+    if (separatorIndex <= 0) {
+      continue
+    }
+
+    const key = line.slice(0, separatorIndex).trim()
+    if (!key || process.env[key] !== undefined) {
+      continue
+    }
+
+    let value = line.slice(separatorIndex + 1).trim()
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1)
+    }
+
+    process.env[key] = value
+  }
+}
+
+loadEnvFile(envPath)
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemma-4-26b-a4b-it'
@@ -11,10 +52,6 @@ const PORT = Number(process.env.PORT || 3000)
 const CAMERA_STREAM_URL = process.env.TRIAGE_CAMERA_STREAM_URL || 'http://127.0.0.1:8085/stream'
 const CAMERA_FRAME_URL = process.env.TRIAGE_CAMERA_FRAME_URL || 'http://127.0.0.1:8085/frame'
 const CAMERA_HEALTH_URL = process.env.TRIAGE_CAMERA_HEALTH_URL || 'http://127.0.0.1:8085/health'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const rootDir = path.resolve(__dirname, '..', '..')
-const distDir = path.join(rootDir, 'dist')
 
 const CONTENT_TYPES = {
   '.css': 'text/css; charset=utf-8',

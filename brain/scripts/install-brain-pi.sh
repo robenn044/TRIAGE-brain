@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="${1:-$HOME/TRIAGE-brain}"
 
 sudo apt update
-sudo apt install -y git nodejs npm python3 python3-pip python3-opencv v4l-utils chromium-browser
+sudo apt install -y git nodejs npm python3 python3-pip python3-opencv v4l-utils chromium
 
 cd "$ROOT_DIR"
 npm ci

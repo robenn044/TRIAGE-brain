@@ -21,7 +21,7 @@ cd TRIAGE-brain
 
 ```bash
 sudo apt update && sudo apt full-upgrade -y
-sudo apt install -y git nodejs npm python3 python3-pip python3-opencv v4l-utils chromium-browser
+sudo apt install -y git nodejs npm python3 python3-pip python3-opencv v4l-utils chromium
 ```
 
 ## 4. Install App Dependencies
@@ -101,7 +101,7 @@ Expected result:
 On the Pi:
 
 ```bash
-chromium-browser http://127.0.0.1:3000/ --start-maximized
+chromium http://127.0.0.1:3000/ --start-maximized
 ```
 
 Expected result:

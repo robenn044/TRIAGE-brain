@@ -82,11 +82,14 @@
 
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
-    overflow: hidden;
-    overscroll-behavior: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: auto;
   }
 
   #root {
     min-height: 100vh;
+    min-height: 100dvh;
   }
 }

@@ -71,7 +71,10 @@ const CONTENT_TYPES = {
 
 function noStoreHeaders() {
   return {
-    'Cache-Control': 'no-store',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    Pragma: 'no-cache',
+    Expires: '0',
+    Surrogate-Control: 'no-store',
   }
 }
 
@@ -292,6 +295,7 @@ async function serveStaticAsset(reqPath, res) {
   res.writeHead(200, {
     'Content-Type': CONTENT_TYPES[path.extname(filePath)] || 'application/octet-stream',
     'Content-Length': fileStats.size,
+    ...noStoreHeaders(),
   })
 
   createReadStream(filePath).pipe(res)
@@ -302,6 +306,7 @@ async function serveIndexHtml(res) {
   const html = await readFile(path.join(distDir, 'index.html'))
   res.writeHead(200, {
     'Content-Type': 'text/html; charset=utf-8',
+    ...noStoreHeaders(),
   })
   res.end(html)
 }

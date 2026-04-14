@@ -209,6 +209,13 @@ export class RobotController {
     this.lastMessage = line
     this.lastTelemetryAt = nowIso()
 
+    if (line.startsWith('READY MODE=')) {
+      this.mode = normalizeMode(line.slice('READY MODE='.length))
+      this.drive = 'STOP'
+      this.stopHeartbeat()
+      return
+    }
+
     if (line.startsWith('OK MODE')) {
       this.mode = normalizeMode(line.split(' ').at(-1))
       if (this.mode === 'ai') {

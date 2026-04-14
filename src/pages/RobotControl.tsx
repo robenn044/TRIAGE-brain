@@ -156,28 +156,31 @@ export default function RobotControl() {
 
   const portOptions = robotStatus?.availablePorts ?? []
   const canDrive = robotStatus?.connected && robotStatus.mode === 'ai' && !busy
+  const connectionTone = robotStatus?.connected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+  const modeLabel = robotStatus?.mode?.toUpperCase() || 'UNKNOWN'
+  const compactStatus = [modeLabel, robotStatus?.drive || 'STOP', robotStatus?.portPath || 'Auto-detect'].join(' · ')
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(32,167,219,0.18),transparent_34%),linear-gradient(180deg,#eaf8fd_0%,#f7fbfd_48%,#eef6fb_100%)] px-3 py-3 text-slate-900 sm:px-5 sm:py-5">
-      <div className="mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-[1100px] flex-col gap-3 rounded-[28px] border border-[#20a7db]/15 bg-white/88 p-3 shadow-[0_22px_80px_rgba(15,23,42,0.12)] backdrop-blur-sm sm:min-h-[calc(100vh-2.5rem)] sm:gap-4 sm:p-5">
-        <header className="flex flex-col gap-3 rounded-[24px] border border-[#20a7db]/10 bg-[#f2fbfe] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#20a7db]">
+    <div className="min-h-screen overflow-x-hidden overflow-y-auto touch-pan-y bg-[radial-gradient(circle_at_top,rgba(32,167,219,0.18),transparent_34%),linear-gradient(180deg,#eaf8fd_0%,#f7fbfd_48%,#eef6fb_100%)] px-2 pb-24 pt-2 text-slate-900 sm:px-5 sm:py-5">
+      <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-3 rounded-[24px] border border-[#20a7db]/15 bg-white/88 p-2 shadow-[0_22px_80px_rgba(15,23,42,0.12)] backdrop-blur-sm sm:min-h-[calc(100vh-2.5rem)] sm:gap-4 sm:rounded-[28px] sm:p-5">
+        <header className="flex flex-col gap-3 rounded-[20px] border border-[#20a7db]/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.82),rgba(232,248,253,0.96))] p-3 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:p-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#20a7db] sm:text-[11px]">
               Brain Pi robot control
             </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Switch modes without touching the Arduino</h1>
-            <p className="mt-2 max-w-[720px] text-sm leading-6 text-slate-600">
+            <h1 className="mt-1.5 text-xl font-semibold tracking-tight sm:mt-2 sm:text-3xl">Switch modes without touching the Arduino</h1>
+            <p className="mt-1.5 max-w-[720px] text-[13px] leading-5 text-slate-600 sm:mt-2 sm:text-sm sm:leading-6">
               Open this screen on the Brain Pi display or from your phone on the same network. The Arduino stays connected by USB, and Brain Pi sends the mode switch for you.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" className="h-11 border-[#20a7db]/20 bg-white px-4 text-sm">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            <Button asChild variant="outline" className="h-10 border-[#20a7db]/20 bg-white px-3 text-xs sm:h-11 sm:px-4 sm:text-sm">
               <Link to="/dashboard">Back to dashboard</Link>
             </Button>
             <Button
               onClick={() => void fetchRobotStatus()}
               variant="outline"
-              className="h-11 border-[#20a7db]/20 bg-white px-4 text-sm"
+              className="h-10 border-[#20a7db]/20 bg-white px-3 text-xs sm:h-11 sm:px-4 sm:text-sm"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
               Refresh status
@@ -186,25 +189,23 @@ export default function RobotControl() {
         </header>
 
         <main className="grid flex-1 gap-3 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-[24px] border border-[#20a7db]/12 bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#20a7db]">Connection</p>
-                <h2 className="mt-2 text-xl font-semibold tracking-tight">Robot link</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{robotSummary}</p>
+          <section className="order-2 rounded-[22px] border border-[#20a7db]/12 bg-white p-3 shadow-sm sm:rounded-[24px] sm:p-4 lg:order-1">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] sm:text-[11px]">Connection</p>
+                <h2 className="mt-1.5 text-lg font-semibold tracking-tight sm:mt-2 sm:text-xl">Robot link</h2>
+                <p className="mt-1.5 text-[13px] leading-5 text-slate-600 sm:mt-2 sm:text-sm sm:leading-6">{robotSummary}</p>
               </div>
               <div
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  robotStatus?.connected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
-                }`}
+                className={`self-start rounded-full px-3 py-1 text-xs font-semibold ${connectionTone}`}
               >
                 {robotStatus?.connected ? 'Connected' : 'Disconnected'}
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <div className="mt-4 grid gap-2 sm:gap-3 sm:grid-cols-[1fr_auto]">
               <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Serial port</span>
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Serial port</span>
                 <select
                   value={selectedPort}
                   onChange={event => setSelectedPort(event.target.value)}
@@ -222,17 +223,17 @@ export default function RobotControl() {
               <Button
                 onClick={() => void handleConnect()}
                 disabled={busy}
-                className="h-12 rounded-2xl bg-[#20a7db] px-5 text-sm shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5]"
+                className="h-12 rounded-2xl bg-[#20a7db] px-5 text-sm shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5] sm:min-w-[164px]"
               >
                 <Cable className="mr-2 h-4 w-4" />
                 {busy ? 'Working...' : robotStatus?.connected ? 'Reconnect' : 'Connect robot'}
               </Button>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 hidden gap-3 sm:grid sm:grid-cols-3">
               <div className="rounded-[20px] border border-[#20a7db]/10 bg-[#f8fcfe] p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Mode</p>
-                <p className="mt-2 text-base font-semibold text-slate-900">{robotStatus?.mode?.toUpperCase() || 'UNKNOWN'}</p>
+                <p className="mt-2 text-base font-semibold text-slate-900">{modeLabel}</p>
               </div>
               <div className="rounded-[20px] border border-[#20a7db]/10 bg-[#f8fcfe] p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Drive</p>
@@ -244,12 +245,17 @@ export default function RobotControl() {
               </div>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="mt-4 rounded-[20px] border border-[#20a7db]/10 bg-[linear-gradient(135deg,rgba(32,167,219,0.1),rgba(255,255,255,0.9))] px-3 py-2 sm:hidden">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#20a7db]">Live status</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">{compactStatus}</p>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:mt-5 sm:gap-3 sm:grid-cols-2">
               <Button
                 onClick={() => void handleModeChange('line')}
                 disabled={busy || !robotStatus?.connected}
                 variant={robotStatus?.mode === 'line' ? 'default' : 'outline'}
-                className="h-14 rounded-[20px] text-base"
+                className="h-12 rounded-[18px] text-sm sm:h-14 sm:rounded-[20px] sm:text-base"
               >
                 <Bot className="mr-2 h-5 w-5" />
                 Switch to line mode
@@ -258,92 +264,96 @@ export default function RobotControl() {
                 onClick={() => void handleModeChange('ai')}
                 disabled={busy || !robotStatus?.connected}
                 variant={robotStatus?.mode === 'ai' ? 'default' : 'outline'}
-                className="h-14 rounded-[20px] text-base"
+                className="h-12 rounded-[18px] text-sm sm:h-14 sm:rounded-[20px] sm:text-base"
               >
                 <Bot className="mr-2 h-5 w-5" />
                 Switch to AI mode
               </Button>
             </div>
 
-            <div className="mt-5 rounded-[24px] border border-[#20a7db]/10 bg-[#f2fbfe] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#20a7db]">Emergency control</p>
-                  <h3 className="mt-2 text-lg font-semibold tracking-tight">Manual drive pad</h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
+            <div className="mt-4 rounded-[22px] border border-[#20a7db]/10 bg-[linear-gradient(180deg,rgba(242,251,254,1),rgba(248,252,254,1))] p-3 sm:mt-5 sm:rounded-[24px] sm:p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] sm:text-[11px]">Emergency control</p>
+                  <h3 className="mt-1.5 text-base font-semibold tracking-tight sm:mt-2 sm:text-lg">Manual drive pad</h3>
+                  <p className="mt-1 text-[13px] leading-5 text-slate-600 sm:text-sm sm:leading-6">
                     These buttons only work in AI mode. Every movement is a short burst so the robot stops automatically if you let go.
                   </p>
                 </div>
                 <Button
                   onClick={() => void handleDrive('STOP')}
                   disabled={busy || !robotStatus?.connected}
-                  className="h-14 rounded-[20px] bg-red-500 px-5 text-sm font-semibold text-white hover:bg-red-600"
+                  className="h-12 w-full rounded-[18px] bg-red-500 px-5 text-sm font-semibold text-white hover:bg-red-600 sm:h-14 sm:w-auto sm:rounded-[20px]"
                 >
                   <Square className="mr-2 h-4 w-4 fill-current" />
                   Stop now
                 </Button>
               </div>
 
-              <div className="mx-auto mt-5 grid max-w-[320px] grid-cols-3 gap-3">
+              <div className="mx-auto mt-4 grid max-w-[340px] grid-cols-3 gap-2 sm:mt-5 sm:max-w-[320px] sm:gap-3">
                 <div />
                 <Button
                   onClick={() => void handleDrive('FWD')}
                   disabled={!canDrive}
                   variant="outline"
-                  className="h-16 rounded-[20px] border-[#20a7db]/18 bg-white text-[#20a7db]"
+                  className="h-20 rounded-[22px] border-[#20a7db]/18 bg-white text-[#20a7db] shadow-sm active:scale-[0.98] sm:h-16 sm:rounded-[20px]"
                 >
-                  <ArrowUp className="h-6 w-6" />
+                  <ArrowUp className="h-7 w-7 sm:h-6 sm:w-6" />
                 </Button>
                 <div />
                 <Button
                   onClick={() => void handleDrive('LEFT')}
                   disabled={!canDrive}
                   variant="outline"
-                  className="h-16 rounded-[20px] border-[#20a7db]/18 bg-white text-[#20a7db]"
+                  className="h-20 rounded-[22px] border-[#20a7db]/18 bg-white text-[#20a7db] shadow-sm active:scale-[0.98] sm:h-16 sm:rounded-[20px]"
                 >
-                  <ArrowLeft className="h-6 w-6" />
+                  <ArrowLeft className="h-7 w-7 sm:h-6 sm:w-6" />
                 </Button>
                 <Button
                   onClick={() => void handleDrive('STOP')}
                   disabled={busy || !robotStatus?.connected}
-                  className="h-16 rounded-[20px] bg-red-500 text-white hover:bg-red-600"
+                  className="h-20 rounded-[22px] bg-red-500 text-white shadow-sm hover:bg-red-600 active:scale-[0.98] sm:h-16 sm:rounded-[20px]"
                 >
-                  <Square className="h-5 w-5 fill-current" />
+                  <Square className="h-6 w-6 fill-current sm:h-5 sm:w-5" />
                 </Button>
                 <Button
                   onClick={() => void handleDrive('RIGHT')}
                   disabled={!canDrive}
                   variant="outline"
-                  className="h-16 rounded-[20px] border-[#20a7db]/18 bg-white text-[#20a7db]"
+                  className="h-20 rounded-[22px] border-[#20a7db]/18 bg-white text-[#20a7db] shadow-sm active:scale-[0.98] sm:h-16 sm:rounded-[20px]"
                 >
-                  <ArrowRight className="h-6 w-6" />
+                  <ArrowRight className="h-7 w-7 sm:h-6 sm:w-6" />
                 </Button>
                 <div />
                 <Button
                   onClick={() => void handleDrive('BACK')}
                   disabled={!canDrive}
                   variant="outline"
-                  className="h-16 rounded-[20px] border-[#20a7db]/18 bg-white text-[#20a7db]"
+                  className="h-20 rounded-[22px] border-[#20a7db]/18 bg-white text-[#20a7db] shadow-sm active:scale-[0.98] sm:h-16 sm:rounded-[20px]"
                 >
-                  <ArrowDown className="h-6 w-6" />
+                  <ArrowDown className="h-7 w-7 sm:h-6 sm:w-6" />
                 </Button>
                 <div />
               </div>
+
+              <p className="mt-3 text-center text-[11px] leading-5 text-slate-500 sm:hidden">
+                Thumb-friendly controls are always centered here. Use one short tap per movement.
+              </p>
             </div>
           </section>
 
-          <aside className="flex flex-col gap-3 rounded-[24px] border border-[#20a7db]/12 bg-white p-4 shadow-sm">
-            <div className="rounded-[22px] border border-[#20a7db]/10 bg-[#f8fcfe] p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#20a7db]">Remote access</p>
-              <h2 className="mt-2 text-lg font-semibold tracking-tight">Use this page from any device on the same Wi-Fi</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
+          <aside className="order-1 flex flex-col gap-3 rounded-[22px] border border-[#20a7db]/12 bg-white p-3 shadow-sm sm:rounded-[24px] sm:p-4 lg:order-2">
+            <div className="rounded-[20px] border border-[#20a7db]/10 bg-[#f8fcfe] p-3 sm:rounded-[22px] sm:p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] sm:text-[11px]">Remote access</p>
+              <h2 className="mt-1.5 text-base font-semibold tracking-tight sm:mt-2 sm:text-lg">Use this page from any device on the same Wi-Fi</h2>
+              <p className="mt-1.5 text-[13px] leading-5 text-slate-600 sm:mt-2 sm:text-sm sm:leading-6">
                 Open the Brain Pi address in a browser and go to <span className="font-semibold text-slate-900">/robot-control</span>. Example: <span className="font-semibold text-slate-900">http://brain-pi-ip:3000/robot-control</span>
               </p>
             </div>
 
-            <div className="rounded-[22px] border border-[#20a7db]/10 bg-[#f8fcfe] p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#20a7db]">Safe workflow</p>
-              <ol className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+            <div className="rounded-[20px] border border-[#20a7db]/10 bg-[#f8fcfe] p-3 sm:rounded-[22px] sm:p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] sm:text-[11px]">Safe workflow</p>
+              <ol className="mt-2.5 space-y-1.5 text-[13px] leading-5 text-slate-600 sm:mt-3 sm:space-y-2 sm:text-sm sm:leading-6">
                 <li>1. Connect the robot over USB.</li>
                 <li>2. Switch to <span className="font-semibold text-slate-900">LINE</span> when you want the untouched Arduino follower.</li>
                 <li>3. Switch to <span className="font-semibold text-slate-900">AI</span> only for supervised camera-guided experiments.</li>
@@ -351,9 +361,9 @@ export default function RobotControl() {
               </ol>
             </div>
 
-            <div className="rounded-[22px] border border-[#20a7db]/10 bg-[#f8fcfe] p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#20a7db]">Live status</p>
-              <div className="mt-3 space-y-2 text-sm text-slate-600">
+            <div className="rounded-[20px] border border-[#20a7db]/10 bg-[#f8fcfe] p-3 sm:rounded-[22px] sm:p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] sm:text-[11px]">Live status</p>
+              <div className="mt-2.5 space-y-2 text-[13px] text-slate-600 sm:mt-3 sm:text-sm">
                 <p>
                   <span className="font-semibold text-slate-900">Last message:</span>{' '}
                   {robotStatus?.lastMessage || 'No telemetry yet'}
@@ -370,13 +380,30 @@ export default function RobotControl() {
             </div>
 
             {(error || robotStatus?.lastError) && (
-              <div className="rounded-[22px] border border-red-200 bg-red-50 p-4">
+              <div className="rounded-[20px] border border-red-200 bg-red-50 p-3 sm:rounded-[22px] sm:p-4">
                 <p className="text-sm font-semibold text-red-700">Robot error</p>
                 <p className="mt-2 text-sm leading-6 text-red-600">{error || robotStatus?.lastError}</p>
               </div>
             )}
           </aside>
         </main>
+
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#20a7db]/10 bg-white/92 px-3 py-3 shadow-[0_-12px_32px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
+          <div className="mx-auto flex max-w-[420px] items-center gap-2">
+            <div className="min-w-0 flex-1 rounded-2xl bg-[#f2fbfe] px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#20a7db]">Robot</p>
+              <p className="truncate text-sm font-semibold text-slate-900">{robotStatus?.connected ? compactStatus : 'Disconnected'}</p>
+            </div>
+            <Button
+              onClick={() => void handleDrive('STOP')}
+              disabled={busy || !robotStatus?.connected}
+              className="h-12 rounded-2xl bg-red-500 px-4 text-sm font-semibold text-white hover:bg-red-600"
+            >
+              <Square className="mr-2 h-4 w-4 fill-current" />
+              Stop
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   )

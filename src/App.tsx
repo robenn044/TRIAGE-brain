@@ -7,6 +7,7 @@ import DashboardPanel from "./components/DashboardPanel.tsx";
 import Itinerary from "./pages/Itinerary.tsx";
 import Maps from "./pages/Maps.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import RobotControl from "./pages/RobotControl.tsx";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<DashboardPanel />} />
           <Route path="/dashboard" element={<DashboardPanel />} />
+          <Route path="/robot-control" element={<RobotControl />} />
           <Route path="/itinerary" element={<Itinerary />} />
           <Route path="/maps" element={<Maps />} />
           <Route path="*" element={<NotFound />} />

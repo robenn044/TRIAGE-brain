@@ -18,6 +18,7 @@ Dashboard-only TRIAGE build for the Raspberry Pi 5 "Brain Pi". This repo removes
 - `brain/scripts/`: install and kiosk helpers
 - `brain/docs/BRAIN_PI_SETUP.md`: step-by-step Pi setup
 - `brain/docs/ROBOT_CONTROL_PLAN.md`: movement-mode plan and testing flow
+- `brain/docs/ROBOT_UPLOAD_GUIDE.md`: upload and remote switching guide
 
 ## Local Commands
 
@@ -43,7 +44,9 @@ The Brain Pi repo now includes a two-mode robot architecture:
 - `LINE`: preserves the original Arduino line follower behavior
 - `AI`: Brain Pi drives the Arduino over USB serial in short supervised bursts
 
-See `brain/docs/ROBOT_CONTROL_PLAN.md`.
+Use `http://BRAIN_PI_IP:3000/robot-control` to switch modes remotely.
+
+See `brain/docs/ROBOT_CONTROL_PLAN.md` and `brain/docs/ROBOT_UPLOAD_GUIDE.md`.
 
 ## Environment
 

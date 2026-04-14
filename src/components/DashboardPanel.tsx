@@ -1289,6 +1289,13 @@ export default function DashboardPanel() {
             >
               Open itinerary planner
             </Button>
+            <Button
+              onClick={() => navigate('/robot-control')}
+              variant="outline"
+              className="h-9 border-[#20a7db]/[0.18] bg-white text-xs max-[820px]:h-8 max-[820px]:text-[11px]"
+            >
+              Open robot control
+            </Button>
           </div>
         </aside>
       </main>

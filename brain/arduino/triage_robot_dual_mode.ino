@@ -18,9 +18,10 @@
 #define TRIG 9
 #define ECHO 10
 
-// --- SETTINGS (original forward speed, gentler turns) ---
+// --- SETTINGS (line follower stays original, AI forward gets full speed) ---
 int spd = 200;
 int turnSpd = 255;
+int aiForwardSpd = 255;
 
 enum RobotMode {
   MODE_LINE,
@@ -164,7 +165,7 @@ void runAiMode() {
 void executeAiDrive(String driveCommand) {
   if (driveCommand == "FWD") {
     aiDrive = "FWD";
-    forward();
+    aiForward();
     return;
   }
 
@@ -238,6 +239,16 @@ void forward() {
   digitalWrite(in3, HIGH);
   digitalWrite(in4, LOW);
   analogWrite(enB, spd);
+}
+
+void aiForward() {
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  analogWrite(enA, aiForwardSpd);
+
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+  analogWrite(enB, aiForwardSpd);
 }
 
 void backward() {

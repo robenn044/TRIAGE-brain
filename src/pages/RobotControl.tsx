@@ -162,6 +162,12 @@ export default function RobotControl() {
     [callRobotEndpoint],
   )
 
+  const portOptions = robotStatus?.availablePorts ?? []
+  const canDrive = robotStatus?.connected && robotStatus.mode === 'ai' && !busy
+  const connectionTone = robotStatus?.connected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+  const modeLabel = robotStatus?.mode?.toUpperCase() || 'UNKNOWN'
+  const compactStatus = [modeLabel, robotStatus?.drive || 'STOP', robotStatus?.portPath || 'Auto-detect'].join(' · ')
+
   const clearHoldTimer = useCallback(() => {
     if (holdTimerRef.current !== null) {
       window.clearTimeout(holdTimerRef.current)
@@ -224,12 +230,6 @@ export default function RobotControl() {
       clearHoldTimer()
     }
   }, [clearHoldTimer])
-
-  const portOptions = robotStatus?.availablePorts ?? []
-  const canDrive = robotStatus?.connected && robotStatus.mode === 'ai' && !busy
-  const connectionTone = robotStatus?.connected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
-  const modeLabel = robotStatus?.mode?.toUpperCase() || 'UNKNOWN'
-  const compactStatus = [modeLabel, robotStatus?.drive || 'STOP', robotStatus?.portPath || 'Auto-detect'].join(' · ')
 
   return (
     <div

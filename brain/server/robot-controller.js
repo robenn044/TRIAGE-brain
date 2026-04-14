@@ -1,4 +1,5 @@
 import { SerialPort } from 'serialport'
+import { readdirSync } from 'node:fs'
 
 const DEFAULT_BAUD_RATE = Number(process.env.TRIAGE_ROBOT_BAUD_RATE || 9600)
 const DEFAULT_PORT = process.env.TRIAGE_ROBOT_SERIAL_PORT || ''
@@ -49,6 +50,26 @@ function looksLikeArduino(portInfo) {
   )
 }
 
+function scanLinuxSerialPaths() {
+  try {
+    return readdirSync('/dev')
+      .filter(name => /^tty(USB|ACM|AMA)\d+$/.test(name))
+      .map(name => `/dev/${name}`)
+  } catch {
+    return []
+  }
+}
+
+function getPortPriority(path, isRecommended) {
+  const value = String(path || '').toLowerCase()
+  if (isRecommended) return 100
+  if (value.includes('/dev/ttyusb')) return 90
+  if (value.includes('/dev/ttyacm')) return 85
+  if (value.includes('usbmodem')) return 80
+  if (value.includes('/dev/ttyama')) return 10
+  return 50
+}
+
 export class RobotController {
   constructor() {
     this.port = null
@@ -68,12 +89,30 @@ export class RobotController {
 
   async listPorts() {
     const ports = await SerialPort.list()
-    return ports.map(port => ({
+    const mappedPorts = ports.map(port => ({
       path: port.path,
       manufacturer: port.manufacturer || null,
       friendlyName: port.friendlyName || null,
       isRecommended: looksLikeArduino(port),
     }))
+
+    const knownPaths = new Set(mappedPorts.map(port => port.path))
+    for (const path of scanLinuxSerialPaths()) {
+      if (knownPaths.has(path)) {
+        continue
+      }
+
+      mappedPorts.push({
+        path,
+        manufacturer: null,
+        friendlyName: null,
+        isRecommended: /\/dev\/tty(USB|ACM)\d+$/i.test(path),
+      })
+    }
+
+    return mappedPorts.sort((left, right) => {
+      return getPortPriority(right.path, right.isRecommended) - getPortPriority(left.path, left.isRecommended)
+    })
   }
 
   async getPreferredPortPath() {
@@ -87,16 +126,24 @@ export class RobotController {
   }
 
   async connect(requestedPath) {
-    if (this.connected && this.port && this.port.isOpen) {
+    const normalizedRequestedPath = typeof requestedPath === 'string' && requestedPath.trim() ? requestedPath.trim() : null
+
+    if (
+      this.connected &&
+      this.port &&
+      this.port.isOpen &&
+      (!normalizedRequestedPath || normalizedRequestedPath === this.portPath)
+    ) {
       return this.getStatus()
     }
 
-    const portPath = requestedPath || (await this.getPreferredPortPath())
+    const portPath = normalizedRequestedPath || (await this.getPreferredPortPath())
     if (!portPath) {
       this.lastError = 'No Arduino serial port detected'
       throw new Error(this.lastError)
     }
 
+    this.portPath = portPath
     await this.disconnect({ preserveMode: true })
 
     await new Promise((resolve, reject) => {

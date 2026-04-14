@@ -347,17 +347,20 @@ export class RobotController {
     return this.getStatus()
   }
 
-  async driveCommand(command, durationMs = COMMAND_BURST_MS) {
+  async driveCommand(command, options = {}) {
     const normalized = normalizeCommand(command)
     if (this.mode !== 'ai') {
       throw new Error('Switch the robot to AI mode before sending drive commands')
     }
 
+    const isContinuous = options?.continuous === true
+    const durationMs = options?.durationMs
+
     await this.writeLine(`DRIVE ${normalized}`)
     this.drive = normalized
     this.clearManualStopTimer()
 
-    if (normalized !== 'STOP') {
+    if (normalized !== 'STOP' && !isContinuous) {
       const safeDuration = Math.max(100, Math.min(Number(durationMs) || COMMAND_BURST_MS, 2000))
       this.manualStopTimer = setTimeout(() => {
         this.writeLine('DRIVE STOP').catch(error => {

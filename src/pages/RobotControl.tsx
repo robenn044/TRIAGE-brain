@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowDown,
@@ -45,6 +45,10 @@ export default function RobotControl() {
   const [selectedPort, setSelectedPort] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const holdTimerRef = useRef<number | null>(null)
+  const holdCommandRef = useRef<'FWD' | 'BACK' | 'LEFT' | 'RIGHT' | null>(null)
+  const holdStartedRef = useRef(false)
+  const suppressTapCommandRef = useRef<'FWD' | 'BACK' | 'LEFT' | 'RIGHT' | null>(null)
 
   const fetchRobotStatus = useCallback(async () => {
     try {
@@ -140,7 +144,10 @@ export default function RobotControl() {
   )
 
   const handleDrive = useCallback(
-    async (command: 'FWD' | 'BACK' | 'LEFT' | 'RIGHT' | 'STOP', durationMs?: number) => {
+    async (
+      command: 'FWD' | 'BACK' | 'LEFT' | 'RIGHT' | 'STOP',
+      options?: { durationMs?: number; continuous?: boolean },
+    ) => {
       if (command === 'STOP') {
         await callRobotEndpoint('/api/robot/stop')
         return
@@ -148,11 +155,75 @@ export default function RobotControl() {
 
       await callRobotEndpoint('/api/robot/command', {
         command,
-        durationMs,
+        durationMs: options?.durationMs,
+        continuous: options?.continuous,
       })
     },
     [callRobotEndpoint],
   )
+
+  const clearHoldTimer = useCallback(() => {
+    if (holdTimerRef.current !== null) {
+      window.clearTimeout(holdTimerRef.current)
+      holdTimerRef.current = null
+    }
+  }, [])
+
+  const finishHold = useCallback(
+    async (command?: 'FWD' | 'BACK' | 'LEFT' | 'RIGHT') => {
+      clearHoldTimer()
+      const activeCommand = command || holdCommandRef.current
+      if (!activeCommand) {
+        return
+      }
+
+      if (holdStartedRef.current) {
+        suppressTapCommandRef.current = activeCommand
+        holdStartedRef.current = false
+        holdCommandRef.current = null
+        await handleDrive('STOP')
+        return
+      }
+
+      holdCommandRef.current = null
+    },
+    [clearHoldTimer, handleDrive],
+  )
+
+  const startHold = useCallback(
+    (command: 'FWD' | 'BACK' | 'LEFT' | 'RIGHT') => {
+      if (!canDrive) {
+        return
+      }
+
+      clearHoldTimer()
+      holdCommandRef.current = command
+      holdStartedRef.current = false
+      holdTimerRef.current = window.setTimeout(() => {
+        holdStartedRef.current = true
+        void handleDrive(command, { continuous: true })
+      }, 260)
+    },
+    [canDrive, clearHoldTimer, handleDrive],
+  )
+
+  const tapDrive = useCallback(
+    async (command: 'FWD' | 'BACK' | 'LEFT' | 'RIGHT') => {
+      if (suppressTapCommandRef.current === command) {
+        suppressTapCommandRef.current = null
+        return
+      }
+
+      await handleDrive(command)
+    },
+    [handleDrive],
+  )
+
+  useEffect(() => {
+    return () => {
+      clearHoldTimer()
+    }
+  }, [clearHoldTimer])
 
   const portOptions = robotStatus?.availablePorts ?? []
   const canDrive = robotStatus?.connected && robotStatus.mode === 'ai' && !busy
@@ -280,7 +351,7 @@ export default function RobotControl() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] sm:text-[11px]">Emergency control</p>
                   <h3 className="mt-1.5 text-base font-semibold tracking-tight sm:mt-2 sm:text-lg">Manual drive pad</h3>
                   <p className="mt-1 text-[13px] leading-5 text-slate-600 sm:text-sm sm:leading-6">
-                    These buttons only work in AI mode. Every movement is a short burst so the robot stops automatically if you let go.
+                    Tap for a short burst. Press and hold to keep moving continuously until you release.
                   </p>
                 </div>
                 <Button
@@ -296,7 +367,11 @@ export default function RobotControl() {
               <div className="mx-auto mt-4 grid max-w-[340px] grid-cols-3 gap-2 sm:mt-5 sm:max-w-[320px] sm:gap-3">
                 <div />
                 <Button
-                  onClick={() => void handleDrive('FWD')}
+                  onClick={() => void tapDrive('FWD')}
+                  onPointerDown={() => startHold('FWD')}
+                  onPointerUp={() => void finishHold('FWD')}
+                  onPointerCancel={() => void finishHold('FWD')}
+                  onPointerLeave={() => void finishHold('FWD')}
                   disabled={!canDrive}
                   variant="outline"
                   className="h-20 rounded-[22px] border-[#20a7db]/18 bg-white text-[#20a7db] shadow-sm active:scale-[0.98] sm:h-16 sm:rounded-[20px]"
@@ -305,7 +380,11 @@ export default function RobotControl() {
                 </Button>
                 <div />
                 <Button
-                  onClick={() => void handleDrive('LEFT')}
+                  onClick={() => void tapDrive('LEFT')}
+                  onPointerDown={() => startHold('LEFT')}
+                  onPointerUp={() => void finishHold('LEFT')}
+                  onPointerCancel={() => void finishHold('LEFT')}
+                  onPointerLeave={() => void finishHold('LEFT')}
                   disabled={!canDrive}
                   variant="outline"
                   className="h-20 rounded-[22px] border-[#20a7db]/18 bg-white text-[#20a7db] shadow-sm active:scale-[0.98] sm:h-16 sm:rounded-[20px]"
@@ -320,7 +399,11 @@ export default function RobotControl() {
                   <Square className="h-6 w-6 fill-current sm:h-5 sm:w-5" />
                 </Button>
                 <Button
-                  onClick={() => void handleDrive('RIGHT')}
+                  onClick={() => void tapDrive('RIGHT')}
+                  onPointerDown={() => startHold('RIGHT')}
+                  onPointerUp={() => void finishHold('RIGHT')}
+                  onPointerCancel={() => void finishHold('RIGHT')}
+                  onPointerLeave={() => void finishHold('RIGHT')}
                   disabled={!canDrive}
                   variant="outline"
                   className="h-20 rounded-[22px] border-[#20a7db]/18 bg-white text-[#20a7db] shadow-sm active:scale-[0.98] sm:h-16 sm:rounded-[20px]"
@@ -329,7 +412,11 @@ export default function RobotControl() {
                 </Button>
                 <div />
                 <Button
-                  onClick={() => void handleDrive('BACK')}
+                  onClick={() => void tapDrive('BACK')}
+                  onPointerDown={() => startHold('BACK')}
+                  onPointerUp={() => void finishHold('BACK')}
+                  onPointerCancel={() => void finishHold('BACK')}
+                  onPointerLeave={() => void finishHold('BACK')}
                   disabled={!canDrive}
                   variant="outline"
                   className="h-20 rounded-[22px] border-[#20a7db]/18 bg-white text-[#20a7db] shadow-sm active:scale-[0.98] sm:h-16 sm:rounded-[20px]"

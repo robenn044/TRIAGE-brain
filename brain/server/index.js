@@ -327,7 +327,10 @@ async function handleRobotMode(req, res) {
 
 async function handleRobotCommand(req, res) {
   const body = await readJsonBody(req)
-  const robot = await robotController.driveCommand(body.command, body.durationMs)
+  const robot = await robotController.driveCommand(body.command, {
+    durationMs: body.durationMs,
+    continuous: body.continuous,
+  })
   sendJson(res, 200, { ok: true, robot })
 }
 

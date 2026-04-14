@@ -13,9 +13,11 @@ Dashboard-only TRIAGE build for the Raspberry Pi 5 "Brain Pi". This repo removes
 - `src/`: dashboard-only frontend
 - `brain/server/index.js`: local app server and Gemma proxy
 - `brain/camera/camera.py`: local USB camera server
+- `brain/arduino/triage_robot_dual_mode.ino`: dual-mode Arduino sketch for line + AI control
 - `brain/deploy/systemd/`: service files for Brain Pi boot
 - `brain/scripts/`: install and kiosk helpers
 - `brain/docs/BRAIN_PI_SETUP.md`: step-by-step Pi setup
+- `brain/docs/ROBOT_CONTROL_PLAN.md`: movement-mode plan and testing flow
 
 ## Local Commands
 
@@ -33,6 +35,15 @@ npm run dev
 ```
 
 That Vite server proxies `/api` and `/camera` to `http://127.0.0.1:3000`.
+
+## Robot Control
+
+The Brain Pi repo now includes a two-mode robot architecture:
+
+- `LINE`: preserves the original Arduino line follower behavior
+- `AI`: Brain Pi drives the Arduino over USB serial in short supervised bursts
+
+See `brain/docs/ROBOT_CONTROL_PLAN.md`.
 
 ## Environment
 

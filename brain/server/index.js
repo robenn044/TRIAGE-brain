@@ -4,6 +4,7 @@ import { createReadStream, existsSync, readFileSync } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { robotController } from './robot-controller.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '..', '..')
@@ -67,6 +68,12 @@ const CONTENT_TYPES = {
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
 } 
+
+function noStoreHeaders() {
+  return {
+    'Cache-Control': 'no-store',
+  }
+}
 
 function getErrorMessage(error) {
   return error instanceof Error ? error.message : 'Internal server error'
@@ -147,7 +154,7 @@ function sanitizeAnswer(rawAnswer) {
 function sendJson(res, status, body) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Cache-Control': 'no-store',
+    ...noStoreHeaders(),
   })
   res.end(JSON.stringify(body))
 }
@@ -234,7 +241,7 @@ async function handleCameraFrame(res) {
   res.writeHead(200, {
     'Content-Type': response.headers.get('content-type') || 'image/jpeg',
     'Content-Length': buffer.length,
-    'Cache-Control': 'no-store',
+    ...noStoreHeaders(),
   })
   res.end(buffer)
 }
@@ -252,7 +259,7 @@ async function handleCameraStream(res) {
 
   res.writeHead(200, {
     'Content-Type': response.headers.get('content-type') || 'multipart/x-mixed-replace; boundary=frame',
-    'Cache-Control': 'no-store',
+    ...noStoreHeaders(),
     Connection: 'keep-alive',
   })
 
@@ -299,6 +306,36 @@ async function serveIndexHtml(res) {
   res.end(html)
 }
 
+async function handleRobotStatus(res) {
+  sendJson(res, 200, {
+    ok: true,
+    robot: await robotController.getStatus(),
+  })
+}
+
+async function handleRobotConnect(req, res) {
+  const body = await readJsonBody(req)
+  const robot = await robotController.connect(body.path)
+  sendJson(res, 200, { ok: true, robot })
+}
+
+async function handleRobotMode(req, res) {
+  const body = await readJsonBody(req)
+  const robot = await robotController.setMode(body.mode)
+  sendJson(res, 200, { ok: true, robot })
+}
+
+async function handleRobotCommand(req, res) {
+  const body = await readJsonBody(req)
+  const robot = await robotController.driveCommand(body.command, body.durationMs)
+  sendJson(res, 200, { ok: true, robot })
+}
+
+async function handleRobotStop(res) {
+  const robot = await robotController.stop()
+  sendJson(res, 200, { ok: true, robot })
+}
+
 const server = createServer(async (req, res) => {
   const method = req.method || 'GET'
   const url = new URL(req.url || '/', 'http://127.0.0.1')
@@ -311,6 +348,11 @@ const server = createServer(async (req, res) => {
 
     if (method === 'GET' && url.pathname === '/api/camera/health') {
       await handleCameraHealth(res)
+      return
+    }
+
+    if (method === 'GET' && url.pathname === '/api/robot/status') {
+      await handleRobotStatus(res)
       return
     }
 
@@ -333,6 +375,26 @@ const server = createServer(async (req, res) => {
 
       const answer = await callGemma(body)
       sendJson(res, 200, { answer })
+      return
+    }
+
+    if (method === 'POST' && url.pathname === '/api/robot/connect') {
+      await handleRobotConnect(req, res)
+      return
+    }
+
+    if (method === 'POST' && url.pathname === '/api/robot/mode') {
+      await handleRobotMode(req, res)
+      return
+    }
+
+    if (method === 'POST' && url.pathname === '/api/robot/command') {
+      await handleRobotCommand(req, res)
+      return
+    }
+
+    if (method === 'POST' && url.pathname === '/api/robot/stop') {
+      await handleRobotStop(res)
       return
     }
 

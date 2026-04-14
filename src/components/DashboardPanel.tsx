@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
   Loader2,
   Map,
   MapPin,
   Mic,
   MicOff,
   RefreshCcw,
+  Square,
   Sparkles,
   Video,
   VideoOff,
@@ -17,6 +22,25 @@ import EndTripButton from './EndTripButton'
 
 type AssistantState = 'idle' | 'listening' | 'processing' | 'speaking' | 'error'
 type CameraState = 'loading' | 'ready' | 'offline'
+type RobotMode = 'line' | 'ai' | 'unknown'
+
+interface RobotStatus {
+  connected: boolean
+  portPath: string | null
+  baudRate: number
+  mode: RobotMode
+  drive: string
+  lastError: string | null
+  lastMessage: string | null
+  lastTelemetryAt: string | null
+  lastCommandAt: string | null
+  availablePorts: Array<{
+    path: string
+    manufacturer: string | null
+    friendlyName: string | null
+    isRecommended: boolean
+  }>
+}
 
 interface SpeechRecognitionEvent {
   results: SpeechRecognitionResultList
@@ -73,6 +97,7 @@ const MIC_PREFERENCE_KEY = 'triage-brain.mic-enabled'
 const CAMERA_STREAM_PATH = '/camera/stream'
 const CAMERA_FRAME_PATH = '/api/camera/frame'
 const CAMERA_HEALTH_PATH = '/api/camera/health'
+const ROBOT_STATUS_PATH = '/api/robot/status'
 
 function getSpeechRecognitionCtor() {
   if (typeof window === 'undefined') {
@@ -231,6 +256,9 @@ export default function DashboardPanel() {
   const [micEnabled, setMicEnabled] = useState(() => readStoredFlag(MIC_PREFERENCE_KEY, true))
   const [transcript, setTranscript] = useState('')
   const [lastAnswer, setLastAnswer] = useState('')
+  const [robotStatus, setRobotStatus] = useState<RobotStatus | null>(null)
+  const [robotBusy, setRobotBusy] = useState(false)
+  const [robotError, setRobotError] = useState<string | null>(null)
 
   useEffect(() => {
     stateRef.current = state
@@ -279,6 +307,56 @@ export default function DashboardPanel() {
       setCheckingCamera(false)
     }
   }, [refreshCameraStream])
+
+  const fetchRobotStatus = useCallback(async () => {
+    try {
+      const response = await fetch(ROBOT_STATUS_PATH, {
+        headers: {
+          Accept: 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Robot status returned ${response.status}`)
+      }
+
+      const data = await response.json()
+      setRobotStatus(data.robot ?? null)
+      setRobotError(data.robot?.lastError ?? null)
+    } catch (error) {
+      setRobotError(getErrorMessage(error))
+    }
+  }, [])
+
+  const callRobotEndpoint = useCallback(
+    async (path: string, body?: Record<string, unknown>) => {
+      setRobotBusy(true)
+      setRobotError(null)
+
+      try {
+        const response = await fetch(path, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: body ? JSON.stringify(body) : undefined,
+        })
+
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.error || `Robot request returned ${response.status}`)
+        }
+
+        setRobotStatus(data.robot ?? null)
+        setRobotError(data.robot?.lastError ?? null)
+      } catch (error) {
+        setRobotError(getErrorMessage(error))
+      } finally {
+        setRobotBusy(false)
+      }
+    },
+    [],
+  )
 
   const requestMicrophoneAccess = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -447,6 +525,17 @@ export default function DashboardPanel() {
   useEffect(() => {
     void checkCameraHealth()
   }, [checkCameraHealth])
+
+  useEffect(() => {
+    void fetchRobotStatus()
+    const intervalId = window.setInterval(() => {
+      void fetchRobotStatus()
+    }, 3000)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [fetchRobotStatus])
 
   useEffect(() => {
     let cancelled = false
@@ -757,6 +846,33 @@ export default function DashboardPanel() {
     setMicEnabled(true)
   }, [cameraReady, micEnabled, micPermissionGranted, requestMicrophoneAccess, requestingMicAccess])
 
+  const handleRobotConnect = useCallback(async () => {
+    await callRobotEndpoint('/api/robot/connect', {})
+  }, [callRobotEndpoint])
+
+  const handleRobotMode = useCallback(
+    async (mode: RobotMode) => {
+      await callRobotEndpoint('/api/robot/mode', { mode })
+    },
+    [callRobotEndpoint],
+  )
+
+  const handleRobotCommand = useCallback(
+    async (command: string, durationMs = 375) => {
+      await callRobotEndpoint('/api/robot/command', { command, durationMs })
+    },
+    [callRobotEndpoint],
+  )
+
+  const robotSummary = useMemo(() => {
+    if (!robotStatus?.connected) {
+      return 'Robot controller offline'
+    }
+
+    const modeLabel = robotStatus.mode === 'ai' ? 'AI drive' : robotStatus.mode === 'line' ? 'Line follow' : 'Unknown'
+    return `${modeLabel} on ${robotStatus.portPath ?? 'USB'}`
+  }, [robotStatus])
+
   const statusText = useMemo(() => {
     if (checkingCamera) return 'Checking camera...'
     if (requestingMicAccess) return 'Requesting mic...'
@@ -1060,6 +1176,103 @@ export default function DashboardPanel() {
                 </p>
               </div>
             </div>
+          </div>
+
+          <div className="mt-2.5 rounded-2xl border border-[#20a7db]/10 bg-white/85 p-2 max-[820px]:mt-2 max-[820px]:rounded-[16px] max-[820px]:p-1.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#20a7db] max-[820px]:text-[8px] max-[820px]:tracking-[0.16em]">
+                  Robot
+                </p>
+                <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-800 max-[820px]:text-[10px]">
+                  {robotSummary}
+                </p>
+              </div>
+              <div
+                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                  robotStatus?.connected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
+                }`}
+              >
+                {robotStatus?.connected ? 'USB' : 'Idle'}
+              </div>
+            </div>
+
+            <div className="mt-2 flex gap-1">
+              <Button
+                onClick={handleRobotConnect}
+                variant="outline"
+                disabled={robotBusy}
+                className="h-7 flex-1 border-[#20a7db]/[0.18] bg-white px-2 text-[10px] max-[820px]:h-6 max-[820px]:text-[9px]"
+              >
+                {robotBusy ? 'Connecting...' : robotStatus?.connected ? 'Reconnect' : 'Connect'}
+              </Button>
+              <Button
+                onClick={() => void handleRobotMode('line')}
+                disabled={robotBusy || !robotStatus?.connected}
+                variant={robotStatus?.mode === 'line' ? 'default' : 'outline'}
+                className="h-7 flex-1 px-2 text-[10px] max-[820px]:h-6 max-[820px]:text-[9px]"
+              >
+                Line
+              </Button>
+              <Button
+                onClick={() => void handleRobotMode('ai')}
+                disabled={robotBusy || !robotStatus?.connected}
+                variant={robotStatus?.mode === 'ai' ? 'default' : 'outline'}
+                className="h-7 flex-1 px-2 text-[10px] max-[820px]:h-6 max-[820px]:text-[9px]"
+              >
+                AI
+              </Button>
+            </div>
+
+            <div className="mt-2 grid grid-cols-3 gap-1">
+              <div />
+              <Button
+                onClick={() => void handleRobotCommand('FWD')}
+                disabled={robotBusy || robotStatus?.mode !== 'ai'}
+                variant="outline"
+                className="h-7 border-[#20a7db]/[0.18] bg-white p-0 text-[#20a7db] max-[820px]:h-6"
+              >
+                <ArrowUp className="h-3 w-3" />
+              </Button>
+              <div />
+              <Button
+                onClick={() => void handleRobotCommand('LEFT')}
+                disabled={robotBusy || robotStatus?.mode !== 'ai'}
+                variant="outline"
+                className="h-7 border-[#20a7db]/[0.18] bg-white p-0 text-[#20a7db] max-[820px]:h-6"
+              >
+                <ArrowLeft className="h-3 w-3" />
+              </Button>
+              <Button
+                onClick={() => void handleRobotCommand('STOP', 100)}
+                disabled={robotBusy || robotStatus?.mode !== 'ai'}
+                className="h-7 bg-red-500 p-0 text-white hover:bg-red-600 max-[820px]:h-6"
+              >
+                <Square className="h-3 w-3 fill-current" />
+              </Button>
+              <Button
+                onClick={() => void handleRobotCommand('RIGHT')}
+                disabled={robotBusy || robotStatus?.mode !== 'ai'}
+                variant="outline"
+                className="h-7 border-[#20a7db]/[0.18] bg-white p-0 text-[#20a7db] max-[820px]:h-6"
+              >
+                <ArrowRight className="h-3 w-3" />
+              </Button>
+              <div />
+              <Button
+                onClick={() => void handleRobotCommand('BACK')}
+                disabled={robotBusy || robotStatus?.mode !== 'ai'}
+                variant="outline"
+                className="h-7 border-[#20a7db]/[0.18] bg-white p-0 text-[#20a7db] max-[820px]:h-6"
+              >
+                <ArrowDown className="h-3 w-3" />
+              </Button>
+              <div />
+            </div>
+
+            <p className="mt-2 text-[10px] leading-4 text-slate-500 max-[820px]:text-[9px]">
+              {robotError || robotStatus?.lastMessage || 'Use LINE for the untouched Arduino follower. Use AI for supervised USB drive tests.'}
+            </p>
           </div>
 
           <div className="mt-auto grid gap-1.5 pt-2.5 max-[820px]:pt-2">

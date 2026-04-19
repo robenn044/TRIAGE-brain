@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Send, MapPin, Loader2, ChevronLeft, Coffee, Sun, Moon, Utensils, Lightbulb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import RobotFace from '@/components/RobotFace'
 import EndTripButton from '@/components/EndTripButton'
-import TriageMark from '@/components/TriageMark'
 
 const ALBANIAN_CITIES = [
   'Tirana', 'Durrës', 'Vlorë', 'Sarandë', 'Berat',
@@ -426,18 +426,18 @@ export default function Itinerary() {
   const activeItineraryDay = itinerary?.days?.[activeDay]
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#f4fbfe]">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#f4fbfe]">
       <header className="shrink-0 bg-[#20a7db]">
-        <div className="mx-auto flex w-full items-center gap-2 px-2.5 py-1.5 max-[820px]:gap-1.5 max-[820px]:px-2 max-[820px]:py-1">
-          <button onClick={() => navigate('/dashboard')} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.12] text-white/80 ring-1 ring-white/[0.15] transition-colors hover:bg-white/[0.18] hover:text-white max-[820px]:h-7 max-[820px]:w-7">
+        <div className="mx-auto flex w-full items-center gap-2 px-3 py-1.5">
+          <button onClick={() => navigate('/dashboard')} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.12] text-white/80 ring-1 ring-white/[0.15] transition-colors hover:bg-white/[0.18] hover:text-white">
             <ArrowLeft className="h-3.5 w-3.5" />
           </button>
-          <div className="shrink-0 flex items-center justify-center"><TriageMark className="h-8 w-8 max-[820px]:h-7 max-[820px]:w-7" decorative /></div>
+          <div className="shrink-0 flex items-center justify-center"><RobotFace mini /></div>
           <div className="min-w-0">
-            <h1 className="text-xs font-semibold leading-tight tracking-tight text-white max-[820px]:text-[11px]">Itinerary Planner</h1>
-            <p className="text-[10px] leading-tight text-white/70 max-[820px]:text-[9px]">{done && itinerary ? itinerary.title : 'One-frame survey · Albanian cities'}</p>
+            <h1 className="text-xs font-semibold leading-tight tracking-tight text-white">Itinerary Planner</h1>
+            <p className="text-[10px] leading-tight text-white/70">{done && itinerary ? itinerary.title : 'One-frame survey · Albanian cities'}</p>
           </div>
-          <div className="ml-auto shrink-0 rounded-full bg-white/[0.12] px-2 py-0.5 text-[10px] font-medium text-white/80 ring-1 ring-white/[0.15] max-[820px]:px-1.5 max-[820px]:text-[9px]">
+          <div className="ml-auto shrink-0 rounded-full bg-white/[0.12] px-2 py-0.5 text-[10px] font-medium text-white/80 ring-1 ring-white/[0.15]">
             {done ? '✓ Done' : `${currentStep + 1} / ${SURVEY_STEPS.length}`}
           </div>
           <EndTripButton />
@@ -447,15 +447,15 @@ export default function Itinerary() {
         </div>
       </header>
 
-      <main className="flex w-full min-h-0 flex-1 gap-2 p-2 max-[820px]:gap-1.5 max-[820px]:p-1.5">
+      <main className="flex w-full flex-1 min-h-0 gap-3 p-2.5">
 
         {generating && (
           <div className="flex flex-1 items-center justify-center">
-            <div className="rounded-2xl border border-[#20a7db]/[0.12] bg-white px-8 py-6 text-center shadow-[0_20px_48px_rgba(32,167,219,0.08)] max-[820px]:px-6 max-[820px]:py-5">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#20a7db]/10 max-[820px]:h-10 max-[820px]:w-10">
+            <div className="rounded-2xl border border-[#20a7db]/[0.12] bg-white px-8 py-6 text-center shadow-[0_20px_48px_rgba(32,167,219,0.08)]">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#20a7db]/10">
                 <Loader2 className="h-6 w-6 animate-spin text-[#20a7db]" />
               </div>
-              <p className="mt-3 text-sm font-semibold text-slate-900 max-[820px]:text-[13px]">Building your itinerary for {answers.city as string}…</p>
+              <p className="mt-3 text-sm font-semibold text-slate-900">Building your itinerary for {answers.city as string}…</p>
               <p className="mt-1 text-xs text-slate-500">Crafting a personalised day-by-day plan.</p>
             </div>
           </div>
@@ -475,56 +475,56 @@ export default function Itinerary() {
         {done && !generating && itinerary && (
           <>
             {/* Left: day-by-day plan */}
-            <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[20px] border border-[#20a7db]/[0.12] bg-white shadow-[0_20px_48px_rgba(32,167,219,0.07)] max-[820px]:rounded-[17px]">
+            <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#20a7db]/[0.12] bg-white shadow-[0_20px_48px_rgba(32,167,219,0.07)]">
               {/* Day tabs */}
-              <div className="shrink-0 flex items-center gap-1 border-b border-[#20a7db]/10 bg-[#f4fbfe] px-2.5 py-1.5 overflow-x-auto max-[820px]:px-2 max-[820px]:py-1">
+              <div className="shrink-0 flex items-center gap-1 border-b border-[#20a7db]/10 bg-[#f4fbfe] px-3 py-1.5 overflow-x-auto">
                 {itinerary.days.map((d, i) => (
                   <button key={d.day} onClick={() => setActiveDay(i)}
-                    className={cn('shrink-0 rounded-lg px-3 py-1 text-[10px] font-semibold transition-all max-[820px]:px-2 max-[820px]:text-[9px]',
+                    className={cn('shrink-0 rounded-lg px-3 py-1 text-[10px] font-semibold transition-all',
                       activeDay === i ? 'bg-[#20a7db] text-white shadow-sm' : 'text-slate-500 hover:bg-[#20a7db]/10 hover:text-[#20a7db]')}>
                     {d.day}
                   </button>
                 ))}
                 <button onClick={() => setActiveDay(itinerary.days.length)}
-                  className={cn('shrink-0 rounded-lg px-3 py-1 text-[10px] font-semibold transition-all max-[820px]:px-2 max-[820px]:text-[9px]',
+                  className={cn('shrink-0 rounded-lg px-3 py-1 text-[10px] font-semibold transition-all',
                     activeDay === itinerary.days.length ? 'bg-[#20a7db] text-white shadow-sm' : 'text-slate-500 hover:bg-[#20a7db]/10 hover:text-[#20a7db]')}>
                   Tips
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-2.5 max-[820px]:p-2">
+              <div className="flex-1 overflow-y-auto p-3">
                 {activeItineraryDay && activeDay < itinerary.days.length ? (
-                  <div className="flex h-full flex-col gap-1.5">
+                  <div className="flex flex-col gap-2 h-full">
                     <div className="flex items-center gap-1.5">
                       <MapPin className="h-3.5 w-3.5 text-[#20a7db]" />
-                      <span className="text-xs font-semibold text-[#20a7db] max-[820px]:text-[11px]">{activeItineraryDay.theme}</span>
+                      <span className="text-xs font-semibold text-[#20a7db]">{activeItineraryDay.theme}</span>
                     </div>
                     {/* 3-column horizontal time slots */}
-                    <div className="grid flex-1 grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-3 gap-2 flex-1">
                       {[
                         { icon: Coffee, label: 'Morning', text: activeItineraryDay.morning },
                         { icon: Sun, label: 'Afternoon', text: activeItineraryDay.afternoon },
                         { icon: Moon, label: 'Evening', text: activeItineraryDay.evening },
                       ].map(({ icon: Icon, label, text }) => (
-                        <div key={label} className="flex flex-col gap-1 rounded-xl border border-[#20a7db]/10 bg-[#f8fcfe] p-2.5 max-[820px]:rounded-[14px] max-[820px]:p-2">
+                        <div key={label} className="flex flex-col gap-1.5 rounded-xl border border-[#20a7db]/10 bg-[#f8fcfe] p-3">
                           <div className="flex items-center gap-1.5">
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#20a7db]/10 max-[820px]:h-5 max-[820px]:w-5">
-                              <Icon className="h-3 w-3 text-[#20a7db] max-[820px]:h-2.5 max-[820px]:w-2.5" />
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#20a7db]/10">
+                              <Icon className="h-3 w-3 text-[#20a7db]" />
                             </div>
-                            <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 max-[820px]:text-[8px]">{label}</p>
+                            <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
                           </div>
-                          <p className="text-xs leading-4 text-slate-700 max-[820px]:text-[11px] max-[820px]:leading-4">{text}</p>
+                          <p className="text-xs leading-4 text-slate-700">{text}</p>
                         </div>
                       ))}
                     </div>
                     {/* Summary strip */}
-                    <div className="shrink-0 rounded-xl bg-[#20a7db]/5 px-3 py-2 max-[820px]:px-2.5 max-[820px]:py-1.5">
-                      <p className="text-[10px] leading-4 text-slate-600 italic max-[820px]:leading-3.5">{itinerary.summary}</p>
+                    <div className="shrink-0 rounded-xl bg-[#20a7db]/5 px-3 py-2">
+                      <p className="text-[10px] leading-4 text-slate-600 italic">{itinerary.summary}</p>
                     </div>
                   </div>
                 ) : (
                   /* Tips tab */
-                  <div className="flex h-full flex-col gap-1.5">
+                  <div className="flex flex-col gap-2 h-full">
                     {itinerary.must_eat.length > 0 && (
                       <div>
                         <div className="mb-1.5 flex items-center gap-1.5">
@@ -533,7 +533,7 @@ export default function Itinerary() {
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {itinerary.must_eat.map(item => (
-                            <span key={item} className="rounded-full bg-[#20a7db]/10 px-2.5 py-1 text-[10px] font-medium text-[#20a7db] max-[820px]:px-2 max-[820px]:text-[9px]">{item}</span>
+                            <span key={item} className="rounded-full bg-[#20a7db]/10 px-2.5 py-1 text-[10px] font-medium text-[#20a7db]">{item}</span>
                           ))}
                         </div>
                       </div>
@@ -544,11 +544,11 @@ export default function Itinerary() {
                           <Lightbulb className="h-3.5 w-3.5 text-[#20a7db]" />
                           <p className="text-xs font-semibold text-slate-700">Practical tips</p>
                         </div>
-                        <div className="grid grid-cols-3 gap-1.5">
+                        <div className="grid grid-cols-3 gap-2">
                           {itinerary.tips.map((tip, i) => (
-                            <div key={i} className="flex items-start gap-1.5 rounded-xl border border-[#20a7db]/10 bg-[#f8fcfe] p-2 max-[820px]:rounded-[14px] max-[820px]:p-1.5">
+                            <div key={i} className="flex items-start gap-2 rounded-xl border border-[#20a7db]/10 bg-[#f8fcfe] p-2.5">
                               <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#20a7db]/10 text-[9px] font-bold text-[#20a7db]">{i + 1}</span>
-                              <p className="text-xs leading-4 text-slate-700 max-[820px]:text-[11px] max-[820px]:leading-4">{tip}</p>
+                              <p className="text-xs leading-4 text-slate-700">{tip}</p>
                             </div>
                           ))}
                         </div>
@@ -560,13 +560,13 @@ export default function Itinerary() {
             </section>
 
             {/* Right: recommended places based on interests + city */}
-            <aside className="flex w-[198px] shrink-0 flex-col overflow-hidden rounded-[20px] border border-[#20a7db]/[0.12] bg-[#eff9fd] shadow-sm max-[820px]:w-[176px] max-[820px]:rounded-[17px]">
-              <div className="shrink-0 border-b border-[#20a7db]/10 px-2.5 py-2 max-[820px]:px-2 max-[820px]:py-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] max-[820px]:text-[8px] max-[820px]:tracking-[0.18em]">Recommended for You</p>
-                <p className="text-xs font-semibold text-slate-800 max-[820px]:text-[11px]">Top picks in {answers.city as string}</p>
+            <aside className="flex w-[230px] shrink-0 flex-col overflow-hidden rounded-2xl border border-[#20a7db]/[0.12] bg-[#eff9fd] shadow-sm">
+              <div className="shrink-0 border-b border-[#20a7db]/10 px-3 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db]">Recommended for You</p>
+                <p className="text-xs font-semibold text-slate-800">Top picks in {answers.city as string}</p>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-2 space-y-1.5 max-[820px]:space-y-1">
+              <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
                 {placesLoading && (
                   <div className="flex items-center justify-center py-4">
                     <Loader2 className="h-4 w-4 animate-spin text-[#20a7db]" />
@@ -581,10 +581,10 @@ export default function Itinerary() {
                 {!placesLoading && displayPlaces.map((place, i) => {
                   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ', ' + (answers.city as string))}`
                   return (
-                    <div key={i} className="flex items-center gap-1.5 rounded-xl border border-[#20a7db]/10 bg-white px-2 py-1.5">
+                    <div key={i} className="flex items-center gap-2 rounded-xl border border-[#20a7db]/10 bg-white px-2.5 py-2">
                       <span className="text-base leading-none">{place.emoji}</span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[10px] font-semibold text-slate-800 max-[820px]:text-[9px]">{place.name}</p>
+                        <p className="truncate text-[10px] font-semibold text-slate-800">{place.name}</p>
                         <p className="text-[9px] text-slate-400">{place.type}</p>
                       </div>
                       <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
@@ -597,11 +597,11 @@ export default function Itinerary() {
                 })}
               </div>
 
-              <div className="grid shrink-0 gap-1.5 border-t border-[#20a7db]/10 p-2">
-                <Button onClick={() => navigate('/dashboard')} className="h-8 bg-[#20a7db] text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5] max-[820px]:text-[11px]">
+              <div className="shrink-0 border-t border-[#20a7db]/10 grid gap-1.5 p-2.5">
+                <Button onClick={() => navigate('/dashboard')} className="h-8 bg-[#20a7db] text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5]">
                   Back to dashboard
                 </Button>
-                <Button onClick={handleStartOver} variant="outline" className="h-8 border-[#20a7db]/[0.18] bg-white text-xs max-[820px]:text-[11px]">
+                <Button onClick={handleStartOver} variant="outline" className="h-8 border-[#20a7db]/[0.18] bg-white text-xs">
                   Start over
                 </Button>
               </div>
@@ -612,24 +612,24 @@ export default function Itinerary() {
         {/* ── Survey ── */}
         {!generating && !done && !itineraryError && (
           <>
-            <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[20px] border border-[#20a7db]/[0.12] bg-white shadow-[0_20px_48px_rgba(32,167,219,0.07)] max-[820px]:rounded-[17px]">
-              <div className="shrink-0 border-b border-[#20a7db]/10 px-3 py-2 max-[820px]:px-2.5 max-[820px]:py-1.5">
+            <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#20a7db]/[0.12] bg-white shadow-[0_20px_48px_rgba(32,167,219,0.07)]">
+              <div className="shrink-0 border-b border-[#20a7db]/10 px-4 py-2.5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] max-[820px]:text-[8px] max-[820px]:tracking-[0.18em]">Question {currentStep + 1} of {SURVEY_STEPS.length}</p>
-                    <h2 className="mt-0.5 text-sm font-semibold tracking-tight text-slate-900 max-[820px]:text-[13px]">{step.question}</h2>
-                    {step.hint && <p className="mt-0.5 text-xs text-slate-500 max-[820px]:text-[11px]">{step.hint}</p>}
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#20a7db]">Question {currentStep + 1} of {SURVEY_STEPS.length}</p>
+                    <h2 className="mt-0.5 text-sm font-semibold tracking-tight text-slate-900">{step.question}</h2>
+                    {step.hint && <p className="mt-0.5 text-xs text-slate-500">{step.hint}</p>}
                   </div>
-                  <span className="shrink-0 rounded-lg border border-[#20a7db]/[0.12] bg-[#f4fbfe] px-2 py-1 text-[10px] font-semibold text-slate-600 max-[820px]:text-[9px]">{progress}%</span>
+                  <span className="shrink-0 rounded-lg border border-[#20a7db]/[0.12] bg-[#f4fbfe] px-2 py-1 text-[10px] font-semibold text-slate-600">{progress}%</span>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-2.5 max-[820px]:p-2">
+              <div className="flex-1 overflow-y-auto p-3">
                 {step.type === 'choice' && step.id === 'city' && (
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 lg:grid-cols-5">
                     {step.options!.map(option => (
                       <button key={option} onClick={() => handleChoice(option)}
-                        className={cn('rounded-xl border px-2 py-2 text-left text-xs font-medium transition-all duration-150 max-[820px]:rounded-[14px] max-[820px]:px-1.5 max-[820px]:py-1.5 max-[820px]:text-[11px]',
+                        className={cn('rounded-xl border px-2 py-2 text-left text-xs font-medium transition-all duration-150',
                           currentAnswer === option ? 'border-[#20a7db] bg-[#20a7db]/10 text-[#1578a0] shadow-sm' : 'border-[#20a7db]/[0.12] bg-white text-slate-700 hover:border-[#20a7db]/30 hover:bg-[#20a7db]/5')}>
                         {option}
                       </button>
@@ -640,7 +640,7 @@ export default function Itinerary() {
                   <div className="grid gap-1.5 sm:grid-cols-2">
                     {step.options!.map(option => (
                       <button key={option} onClick={() => handleChoice(option)}
-                        className={cn('rounded-xl border px-3 py-2.5 text-left text-xs font-medium transition-all duration-150 max-[820px]:rounded-[14px] max-[820px]:px-2.5 max-[820px]:py-2 max-[820px]:text-[11px]',
+                        className={cn('rounded-xl border px-3 py-2.5 text-left text-xs font-medium transition-all duration-150',
                           currentAnswer === option ? 'border-[#20a7db] bg-[#20a7db]/10 text-[#1578a0] shadow-sm' : 'border-[#20a7db]/[0.12] bg-white text-slate-700 hover:border-[#20a7db]/30 hover:bg-[#20a7db]/5')}>
                         {option}
                       </button>
@@ -649,17 +649,17 @@ export default function Itinerary() {
                 )}
                 {step.type === 'multi-choice' && (
                   <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-1.5 xl:grid-cols-4">
+                    <div className="grid gap-1.5 sm:grid-cols-2 xl:grid-cols-4">
                       {step.options!.map(option => (
                         <button key={option} onClick={() => toggleMulti(option)}
-                          className={cn('rounded-xl border px-3 py-2 text-left text-xs font-medium transition-all duration-150 max-[820px]:rounded-[14px] max-[820px]:px-2.5 max-[820px]:py-1.5 max-[820px]:text-[11px]',
+                          className={cn('rounded-xl border px-3 py-2 text-left text-xs font-medium transition-all duration-150',
                             multiSelect.includes(option) ? 'border-[#20a7db] bg-[#20a7db] text-white shadow-sm shadow-[#20a7db]/25' : 'border-[#20a7db]/[0.12] bg-white text-slate-700 hover:border-[#20a7db]/30 hover:bg-[#20a7db]/5')}>
                           {option}
                         </button>
                       ))}
                     </div>
                     <Button onClick={handleMultiConfirm} disabled={multiSelect.length === 0}
-                      className="h-9 w-full bg-[#20a7db] text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5] disabled:opacity-40 max-[820px]:h-8 max-[820px]:text-[11px]">
+                      className="h-9 w-full bg-[#20a7db] text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5] disabled:opacity-40">
                       {multiSelect.length === 0 ? 'Select at least one' : `Continue — ${multiSelect.length} selected`}
                     </Button>
                   </div>
@@ -670,26 +670,26 @@ export default function Itinerary() {
                       <input type="text" value={textInput} onChange={e => setTextInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleTextSubmit()}
                         placeholder="e.g. vegetarian meals, wheelchair access…"
-                        className="h-9 flex-1 rounded-xl border border-[#20a7db]/[0.15] bg-[#f4fbfe] px-3 text-xs text-slate-700 placeholder:text-slate-400 transition-colors focus:border-[#20a7db] focus:outline-none focus:ring-2 focus:ring-[#20a7db]/20 max-[820px]:h-8 max-[820px]:text-[11px]" />
+                        className="h-9 flex-1 rounded-xl border border-[#20a7db]/[0.15] bg-[#f4fbfe] px-3 text-xs text-slate-700 placeholder:text-slate-400 transition-colors focus:border-[#20a7db] focus:outline-none focus:ring-2 focus:ring-[#20a7db]/20" />
                       <button onClick={handleTextSubmit}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#20a7db] text-white shadow-sm shadow-[#20a7db]/25 transition-colors hover:bg-[#1b96c5] max-[820px]:h-8 max-[820px]:w-8">
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#20a7db] text-white shadow-sm shadow-[#20a7db]/25 transition-colors hover:bg-[#1b96c5]">
                         <Send className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <button onClick={handleTextSubmit} className="text-xs font-medium text-slate-500 transition-colors hover:text-[#20a7db] max-[820px]:text-[11px]">
+                    <button onClick={handleTextSubmit} className="text-xs font-medium text-slate-500 transition-colors hover:text-[#20a7db]">
                       Skip this question →
                     </button>
                   </div>
                 )}
               </div>
 
-              <div className="flex shrink-0 items-center justify-between border-t border-[#20a7db]/10 bg-[#fbfeff] px-3 py-2 max-[820px]:px-2.5 max-[820px]:py-1.5">
+              <div className="flex shrink-0 items-center justify-between border-t border-[#20a7db]/10 bg-[#fbfeff] px-4 py-2">
                 {currentStep > 0 ? (
-                  <button onClick={handleBack} className="flex items-center gap-1 text-xs font-medium text-slate-500 transition-colors hover:text-slate-900 max-[820px]:text-[11px]">
+                  <button onClick={handleBack} className="flex items-center gap-1 text-xs font-medium text-slate-500 transition-colors hover:text-slate-900">
                     <ChevronLeft className="h-3.5 w-3.5" />Back
                   </button>
                 ) : <span />}
-                <p className="text-[10px] text-slate-400 max-[820px]:text-[9px]">
+                <p className="text-[10px] text-slate-400">
                   {step.type === 'multi-choice' ? (multiSelect.length === 0 ? 'Choose one or more interests.' : `${multiSelect.length} selected`) :
                    step.type === 'text' ? 'Add details or skip.' :
                    currentAnswer ? 'Tap another option to change it.' : 'Choose one option to continue.'}
@@ -698,10 +698,10 @@ export default function Itinerary() {
             </section>
 
             {/* Snapshot sidebar */}
-            <aside className="flex w-[160px] shrink-0 flex-col rounded-[20px] border border-[#20a7db]/[0.12] bg-[#eff9fd] p-2.5 shadow-sm max-[820px]:w-[148px] max-[820px]:rounded-[17px] max-[820px]:p-2">
-              <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] max-[820px]:text-[8px] max-[820px]:tracking-[0.18em]">Trip snapshot</p>
-              <h3 className="mt-1 shrink-0 text-sm font-semibold tracking-tight text-slate-900 max-[820px]:text-[13px]">Answers so far</h3>
-              <div className="mt-2 grid gap-1.5 max-[820px]:mt-1.5 max-[820px]:gap-1">
+            <aside className="flex w-[188px] shrink-0 flex-col rounded-2xl border border-[#20a7db]/[0.12] bg-[#eff9fd] p-3 shadow-sm">
+              <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db]">Trip snapshot</p>
+              <h3 className="mt-1 shrink-0 text-sm font-semibold tracking-tight text-slate-900">Answers so far</h3>
+              <div className="mt-2 grid gap-1.5">
                 {[
                   { label: 'City', value: typeof answers.city === 'string' ? answers.city : 'Choose a city' },
                   { label: 'Duration', value: typeof answers.duration === 'string' ? answers.duration : 'Not selected yet' },
@@ -710,14 +710,14 @@ export default function Itinerary() {
                   { label: 'Group', value: typeof answers.group === 'string' ? answers.group : 'Not selected yet' },
                   { label: 'Notes', value: typeof answers.special === 'string' ? answers.special : 'Optional' },
                 ].map(item => (
-                  <div key={item.label} className="rounded-xl border border-[#20a7db]/10 bg-white/80 px-2 py-1.5 max-[820px]:px-1.5 max-[820px]:py-1">
-                    <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 max-[820px]:text-[8px]">{item.label}</p>
-                    <p className="truncate text-xs font-medium text-slate-800 max-[820px]:text-[11px]">{item.value}</p>
+                  <div key={item.label} className="rounded-xl border border-[#20a7db]/10 bg-white/80 px-2.5 py-1.5">
+                    <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">{item.label}</p>
+                    <p className="truncate text-xs font-medium text-slate-800">{item.value}</p>
                   </div>
                 ))}
               </div>
-              <div className="mt-auto pt-2.5 max-[820px]:pt-2">
-                <Button onClick={() => navigate('/dashboard')} className="h-9 w-full bg-[#20a7db] text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5] max-[820px]:h-8 max-[820px]:text-[11px]">
+              <div className="mt-auto pt-3">
+                <Button onClick={() => navigate('/dashboard')} className="h-9 w-full bg-[#20a7db] text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5]">
                   Back to dashboard
                 </Button>
               </div>

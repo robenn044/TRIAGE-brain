@@ -1,0 +1,153 @@
+.robot-face-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100vh;
+  background-color: #20a7db;
+}
+
+.robot-face {
+  width: 440px;
+  height: 270px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: breathe 5s ease-in-out infinite;
+  cursor: pointer;
+  user-select: none;
+  will-change: transform, opacity;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity  0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.robot-face.leaving {
+  transform: scale(0.82);
+  opacity: 0;
+}
+
+.robot-features {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+}
+
+/* ── LED glow — box-shadow instead of filter for GPU perf ── */
+
+.led {
+  background: #ffffff;
+  box-shadow:
+    0 0 14px 4px rgba(255, 255, 255, 0.95),
+    0 0 40px 8px rgba(255, 255, 255, 0.45),
+    0 0 80px 16px rgba(255, 255, 255, 0.18);
+  will-change: width, height, border-radius;
+  transition:
+    width       0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    height      0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    border-radius 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow  0.5s ease;
+}
+
+.robot-eye {
+  position: relative;
+  overflow: hidden;
+  width: 66px;
+  height: 96px;
+  border-radius: 50%;
+}
+
+.robot-eye.blinking {
+  animation: blink 0.22s ease-in-out forwards;
+}
+
+/* Inner pupil tracker — fills the eye, shifts via JS transform */
+.eye-pupil {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #ffffff;
+  will-change: transform;
+  transition: transform 0.12s ease-out;
+}
+
+.robot-mouth {
+  width: 136px;
+  height: 54px;
+  border-radius: 0 0 44px 44px;
+}
+
+/* hover glow boost */
+.robot-face:hover .led {
+  box-shadow:
+    0 0 20px 6px rgba(255, 255, 255, 1),
+    0 0 56px 12px rgba(255, 255, 255, 0.55),
+    0 0 110px 24px rgba(255, 255, 255, 0.22);
+}
+
+/* ── Expressions ── */
+
+.expr-happy .robot-eye   { width: 66px; height: 96px; border-radius: 50%; }
+.expr-happy .robot-mouth { width: 136px; height: 54px; border-radius: 0 0 44px 44px; }
+
+.expr-surprised .robot-eye   { width: 80px; height: 112px; border-radius: 50%; }
+.expr-surprised .robot-mouth { width: 70px; height: 70px; border-radius: 50%; }
+
+.expr-sad .robot-eye   { width: 62px; height: 82px; border-radius: 50% 50% 50% 50% / 38% 38% 62% 62%; }
+.expr-sad .robot-mouth { width: 124px; height: 50px; border-radius: 44px 44px 0 0; margin-top: 16px; }
+
+.expr-sleepy .robot-eye   { width: 66px; height: 44px; border-radius: 50% 50% 50% 50% / 68% 68% 32% 32%; }
+.expr-sleepy .robot-mouth { width: 96px; height: 30px; border-radius: 0 0 22px 22px; }
+
+.expr-excited .robot-eye   { width: 76px; height: 108px; border-radius: 50%; }
+.expr-excited .robot-mouth { width: 166px; height: 72px; border-radius: 0 0 64px 64px; }
+
+.expr-smirk .robot-eye   { width: 66px; height: 96px; border-radius: 50%; }
+.expr-smirk .robot-mouth { width: 124px; height: 50px; border-radius: 0 0 44px 10px; transform: rotate(-6deg); }
+
+.expr-neutral .robot-eye   { width: 66px; height: 96px; border-radius: 50%; }
+.expr-neutral .robot-mouth { width: 120px; height: 24px; border-radius: 8px; }
+
+/* ── Keyframes ── */
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1)     translateY(0); }
+  50%      { transform: scale(1.018) translateY(-6px); }
+}
+
+@keyframes blink {
+  0%, 100% { transform: scaleY(1); }
+  40%, 60% { transform: scaleY(0.04); }
+}
+
+@keyframes squish {
+  0%   { transform: scale(1, 1); }
+  35%  { transform: scale(1.1, 0.88); }
+  65%  { transform: scale(0.95, 1.06); }
+  100% { transform: scale(1, 1); }
+}
+
+/* ── Mini mode (header dots) ── */
+
+.robot-face-mini {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.mini-dot {
+  width: 6px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.85),
+              0 0 10px 3px rgba(255, 255, 255, 0.4);
+}
+
+.mini-dot.mini-mouth {
+  width: 12px;
+  height: 5px;
+  border-radius: 0 0 6px 6px;
+}

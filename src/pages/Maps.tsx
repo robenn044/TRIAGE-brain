@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import RobotFace from '@/components/RobotFace'
 import EndTripButton from '@/components/EndTripButton'
-import TriageMark from '@/components/TriageMark'
 
 const TIMEOUT = 60_000
 
@@ -25,24 +25,24 @@ export default function Maps() {
   }, [navigate])
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#f4fbfe]">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#f4fbfe]">
       {/* Header */}
       <header className="shrink-0 bg-[#20a7db]">
-        <div className="mx-auto flex w-full items-center gap-2 px-2.5 py-1.5 max-[820px]:gap-1.5 max-[820px]:px-2 max-[820px]:py-1">
+        <div className="mx-auto flex w-full items-center gap-2 px-3 py-1.5">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.12] text-white/80 ring-1 ring-white/[0.15] transition-colors hover:bg-white/[0.18] hover:text-white max-[820px]:h-7 max-[820px]:w-7"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.12] text-white/80 ring-1 ring-white/[0.15] transition-colors hover:bg-white/[0.18] hover:text-white"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
           </button>
 
           <div className="shrink-0 flex items-center justify-center">
-            <TriageMark className="h-8 w-8 max-[820px]:h-7 max-[820px]:w-7" decorative />
+            <RobotFace mini />
           </div>
 
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-xs font-semibold text-white max-[820px]:text-[11px]">Triage</h1>
-            <p className="truncate text-[10px] text-white/70 max-[820px]:text-[9px]">Explore the map</p>
+            <h1 className="truncate text-xs font-semibold text-white">Triage</h1>
+            <p className="truncate text-[10px] text-white/70">Explore the map</p>
           </div>
           <EndTripButton />
         </div>

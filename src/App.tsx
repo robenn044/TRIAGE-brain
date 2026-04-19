@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Index from "./pages/Index.tsx";
 import DashboardPanel from "./components/DashboardPanel.tsx";
 import Itinerary from "./pages/Itinerary.tsx";
 import Maps from "./pages/Maps.tsx";
@@ -18,7 +19,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<DashboardPanel />} />
+          <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<DashboardPanel />} />
           <Route path="/robot-control" element={<RobotControl />} />
           <Route path="/itinerary" element={<Itinerary />} />

@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import TriageMark from '@/components/TriageMark'
 import EndTripButton from '@/components/EndTripButton'
+import RobotFace from '@/components/RobotFace'
 
 const TIMEOUT = 60_000
 
@@ -37,7 +37,7 @@ export default function Maps() {
           </button>
 
           <div className="shrink-0 flex items-center justify-center">
-            <TriageMark className="h-8 w-8 max-[820px]:h-7 max-[820px]:w-7" decorative />
+            <RobotFace mini />
           </div>
 
           <div className="min-w-0 flex-1">

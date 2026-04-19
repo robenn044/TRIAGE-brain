@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import EndTripButton from './EndTripButton'
-import RobotFace from './RobotFace'
+import TriageMark from './TriageMark'
 
 type AssistantState = 'idle' | 'listening' | 'processing' | 'speaking' | 'error'
 type CameraState = 'loading' | 'ready' | 'offline'
@@ -789,8 +789,8 @@ export default function DashboardPanel() {
     const resetLockTimer = () => {
       clearTimeout(lockTimer)
       lockTimer = setTimeout(() => {
-        sessionStorage.setItem('lockReturnPath', '/dashboard')
-        navigate('/')
+        sessionStorage.clear()
+        window.location.replace('/')
       }, SESSION_LOCK_TIMEOUT_MS)
     }
 
@@ -802,7 +802,7 @@ export default function DashboardPanel() {
       clearTimeout(lockTimer)
       events.forEach(eventName => window.removeEventListener(eventName, resetLockTimer))
     }
-  }, [navigate])
+  }, [])
 
   useEffect(() => {
     const syncVoices = () => {
@@ -934,7 +934,7 @@ export default function DashboardPanel() {
       <header className="shrink-0 bg-[#20a7db]">
         <div className="mx-auto flex w-full items-center gap-2 px-2.5 py-1.5 max-[820px]:gap-1.5 max-[820px]:px-2 max-[820px]:py-1">
           <div className="shrink-0">
-            <RobotFace mini />
+            <TriageMark className="h-9 w-9 max-[820px]:h-7 max-[820px]:w-7" decorative />
           </div>
           <div className="min-w-0">
             <h1 className="text-xs font-semibold leading-tight tracking-tight text-white max-[820px]:text-[11px]">Triage</h1>

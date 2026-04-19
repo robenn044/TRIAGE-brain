@@ -4,7 +4,7 @@ import { ArrowLeft, Send, MapPin, Loader2, ChevronLeft, Coffee, Sun, Moon, Utens
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import EndTripButton from '@/components/EndTripButton'
-import RobotFace from '@/components/RobotFace'
+import TriageMark from '@/components/TriageMark'
 
 const ALBANIAN_CITIES = [
   'Tirana', 'Durrës', 'Vlorë', 'Sarandë', 'Berat',
@@ -432,7 +432,7 @@ export default function Itinerary() {
           <button onClick={() => navigate('/dashboard')} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.12] text-white/80 ring-1 ring-white/[0.15] transition-colors hover:bg-white/[0.18] hover:text-white max-[820px]:h-7 max-[820px]:w-7">
             <ArrowLeft className="h-3.5 w-3.5" />
           </button>
-          <div className="shrink-0 flex items-center justify-center"><RobotFace mini /></div>
+          <div className="shrink-0 flex items-center justify-center"><TriageMark className="h-8 w-8 max-[820px]:h-7 max-[820px]:w-7" decorative /></div>
           <div className="min-w-0">
             <h1 className="text-xs font-semibold leading-tight tracking-tight text-white max-[820px]:text-[11px]">Itinerary Planner</h1>
             <p className="text-[10px] leading-tight text-white/70 max-[820px]:text-[9px]">{done && itinerary ? itinerary.title : 'One-frame survey · Albanian cities'}</p>

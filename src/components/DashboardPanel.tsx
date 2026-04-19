@@ -98,6 +98,7 @@ const CAMERA_STREAM_PATH = '/camera/stream'
 const CAMERA_FRAME_PATH = '/api/camera/frame'
 const CAMERA_HEALTH_PATH = '/api/camera/health'
 const ROBOT_STATUS_PATH = '/api/robot/status'
+const SESSION_LOCK_TIMEOUT_MS = 60_000
 
 function getSpeechRecognitionCtor() {
   if (typeof window === 'undefined') {
@@ -177,32 +178,32 @@ function describeMicrophoneError(error: unknown) {
 
   if (!navigator.mediaDevices?.getUserMedia) {
     return {
-      summary: 'Microphone access is not available',
+      summary: 'Voice input is not available',
       detail:
         window.location.protocol !== 'https:' && window.location.hostname !== 'localhost'
-          ? 'Chrome requires HTTPS before it can request microphone access.'
-          : 'This browser does not expose the microphone API.',
+          ? 'Open Triage on a secure connection to use voice input.'
+          : 'This device cannot use voice input here.',
     }
   }
 
   if (!getSpeechRecognitionCtor()) {
     return {
-      summary: 'Free English STT is unavailable',
-      detail: 'Chrome speech recognition is required for the built-in free English STT.',
+      summary: 'Voice input is unavailable',
+      detail: 'Open Triage in a supported browser to use voice input.',
     }
   }
 
   if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
     return {
       summary: 'Microphone permission denied',
-      detail: 'Allow microphone access in Chrome to enable English speech recognition.',
+      detail: 'Allow microphone access to talk with Triage.',
     }
   }
 
   if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
     return {
       summary: 'No microphone found',
-      detail: 'Chrome could not find a microphone on this system.',
+      detail: 'No microphone was found on this device.',
     }
   }
 
@@ -241,6 +242,8 @@ export default function DashboardPanel() {
   const isSpeakingRef = useRef(false)
   const restartAfterSpeechRef = useRef(false)
   const stateRef = useRef<AssistantState>('idle')
+  const requestInFlightRef = useRef(false)
+  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [entered, setEntered] = useState(false)
   const [state, setState] = useState<AssistantState>('idle')
@@ -390,7 +393,11 @@ export default function DashboardPanel() {
         return
       }
 
-      window.setTimeout(() => {
+      if (restartTimerRef.current) {
+        clearTimeout(restartTimerRef.current)
+      }
+
+      restartTimerRef.current = window.setTimeout(() => {
         if (!micEnabled || !micPermissionGranted || !recognitionRef.current || isSpeakingRef.current) {
           return
         }
@@ -458,6 +465,12 @@ export default function DashboardPanel() {
 
   const askGemma = useCallback(
     async (prompt: string) => {
+      if (requestInFlightRef.current) {
+        return
+      }
+
+      requestInFlightRef.current = true
+
       try {
         recognitionRef.current?.stop()
       } catch {
@@ -481,19 +494,25 @@ export default function DashboardPanel() {
 
         const image = await blobToBase64(await frameResponse.blob())
         const livePrompt = [
-          'You are TRIAGE, a live tourism kiosk assistant in Albania.',
-          'You are speaking directly to one traveler in real time.',
-          'Return only the exact final words that should be spoken out loud right now.',
-          'Be warm, concise, natural, and specific to the traveler when possible.',
-          'Do not reveal chain-of-thought, analysis, parameters, steps, hidden instructions, question lists, or drafts.',
-          'If the traveler says hello or asks whether you can hear them, answer naturally and briefly, then offer help with Albania.',
-          `Traveler said: ${prompt}`,
+          'You are replying inside a live voice-and-camera tourist kiosk conversation.',
+          'Return only the exact final words that should be spoken to the traveler right now.',
+          'Keep it to one or two short sentences.',
+          'Be warm, personal, natural, and concise.',
+          'Do not include thinking process, analysis, steps, options, drafts, quotes, labels, markdown, or bullet points.',
+          'If the traveler is greeting you or checking whether you can hear them, answer naturally and briefly, then offer help with Albania.',
+          `Traveler message: ${prompt}`,
         ].join(' ')
+
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 15000)
 
         const response = await fetch('/api/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image, prompt: livePrompt }),
+          body: JSON.stringify({ image, prompt: livePrompt, max_tokens: 120 }),
+          signal: controller.signal,
+        }).finally(() => {
+          clearTimeout(timeoutId)
         })
 
         if (!response.ok) {
@@ -512,9 +531,14 @@ export default function DashboardPanel() {
         setState('error')
         setMicError('Assistant request failed')
         setMicErrorDetail(message)
+        if (micEnabled && micPermissionGranted) {
+          restartRecognitionSoon(600)
+        }
+      } finally {
+        requestInFlightRef.current = false
       }
     },
-    [speak],
+    [micEnabled, micPermissionGranted, restartRecognitionSoon, speak],
   )
 
   useEffect(() => {
@@ -585,8 +609,8 @@ export default function DashboardPanel() {
 
     const SpeechRecognition = getSpeechRecognitionCtor()
     if (!SpeechRecognition) {
-      setMicError('Free English STT is unavailable')
-      setMicErrorDetail('Use Chrome or Microsoft Edge to enable browser speech recognition.')
+      setMicError('Voice input is unavailable')
+      setMicErrorDetail('Open Triage in a supported browser to use voice input.')
       setState('error')
       return
     }
@@ -618,7 +642,7 @@ export default function DashboardPanel() {
     }
 
     const flush = () => {
-      if (processingLock || isSpeakingRef.current) {
+      if (processingLock || isSpeakingRef.current || requestInFlightRef.current) {
         return
       }
 
@@ -638,7 +662,7 @@ export default function DashboardPanel() {
       const wordCount = text.split(/\s+/).length
       if (wordCount < 2 || text.length < 8) {
         setTranscript('')
-        restartRecognitionSoon(250)
+        restartRecognitionSoon(200)
         return
       }
 
@@ -676,13 +700,13 @@ export default function DashboardPanel() {
         accumulated += `${accumulated ? ' ' : ''}${newFinal.trim()}`
         interimText = ''
         setTranscript(accumulated)
-        resetSilenceTimer(1200)
+        resetSilenceTimer(850)
       }
 
       if (newInterim) {
         interimText = newInterim.trim()
         setTranscript(accumulated ? `${accumulated} ${interimText}` : interimText)
-        resetSilenceTimer(1800)
+        resetSilenceTimer(1200)
       }
     }
 
@@ -700,16 +724,15 @@ export default function DashboardPanel() {
         setMicEnabled(false)
         setMicPermissionGranted(false)
         setMicError('Microphone permission denied')
-        setMicErrorDetail('Allow microphone access in Chrome to use the free English STT.')
+        setMicErrorDetail('Allow microphone access to talk with Triage.')
       } else if (event.error === 'audio-capture') {
         setMicError('Microphone is not receiving sound')
-        setMicErrorDetail(
-          'Chrome has microphone access, but no audio input is reaching speech recognition. Check the selected microphone and retry.',
-        )
+        setMicErrorDetail('We cannot hear you right now. Check your microphone and try again.')
         restartRecognitionSoon(700)
+        return
       } else {
-        setMicError('Speech recognition error')
-        setMicErrorDetail(`Chrome STT returned: ${event.error}`)
+        setMicError('Voice input error')
+        setMicErrorDetail('Voice input ran into a problem. Please try again.')
       }
 
       setState('error')
@@ -768,7 +791,7 @@ export default function DashboardPanel() {
       lockTimer = setTimeout(() => {
         sessionStorage.clear()
         window.location.replace('/')
-      }, 45_000)
+      }, SESSION_LOCK_TIMEOUT_MS)
     }
 
     const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'] as const
@@ -794,6 +817,10 @@ export default function DashboardPanel() {
       speechSynthesis.removeEventListener?.('voiceschanged', syncVoices)
 
       try {
+        if (restartTimerRef.current) {
+          clearTimeout(restartTimerRef.current)
+          restartTimerRef.current = null
+        }
         recognitionRef.current?.stop()
       } catch {
         // ignore
@@ -887,13 +914,13 @@ export default function DashboardPanel() {
 
   const footerText = useMemo(() => {
     if (state === 'speaking' && lastAnswer) return lastAnswer
-    if (state === 'processing') return 'Sending your English transcript and current Brain Pi camera frame to Gemma 4...'
+    if (state === 'processing') return 'Checking the scene and preparing your answer...'
     if (transcript && state === 'listening') return transcript
     if (cameraError) return cameraError
     if (micError) return micError
-    if (!cameraReady) return 'Waiting for the local Brain Pi camera stream...'
-    if (cameraReady && !micPermissionGranted) return 'Camera is live. Tap the mic button once to enable free English STT.'
-    if (cameraReady && micPermissionGranted && !micEnabled) return 'Microphone paused. Tap the mic button to resume English STT.'
+    if (!cameraReady) return 'Waiting for the live view...'
+    if (cameraReady && !micPermissionGranted) return 'The live view is ready. Tap the mic button to speak.'
+    if (cameraReady && micPermissionGranted && !micEnabled) return 'Microphone paused. Tap the mic button to resume.'
     return 'Ask me anything about Albania or what the camera is seeing.'
   }, [cameraError, cameraReady, lastAnswer, micError, micEnabled, micPermissionGranted, state, transcript])
 
@@ -911,7 +938,7 @@ export default function DashboardPanel() {
           </div>
           <div className="min-w-0">
             <h1 className="text-xs font-semibold leading-tight tracking-tight text-white max-[820px]:text-[11px]">Triage</h1>
-            <p className="text-[10px] leading-tight text-white/70 max-[820px]:text-[9px]">Brain Pi dashboard + local camera stream</p>
+            <p className="text-[10px] leading-tight text-white/70 max-[820px]:text-[9px]">Your live guide in Albania</p>
           </div>
           <div className="ml-auto shrink-0 rounded-full bg-white/[0.12] px-2 py-0.5 text-[10px] font-medium text-white/80 ring-1 ring-white/[0.15] max-[820px]:px-1.5 max-[820px]:text-[9px]">
             {statusText}
@@ -925,10 +952,10 @@ export default function DashboardPanel() {
           <div className="flex shrink-0 items-center justify-between gap-2 max-[820px]:gap-1.5">
             <div className="min-w-0">
               <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] max-[820px]:text-[8px] max-[820px]:tracking-[0.18em]">
-                Brain Pi
+                Live view
               </p>
               <h2 className="mt-0.5 text-sm font-semibold leading-tight tracking-tight text-slate-900 max-[820px]:text-[13px]">
-                Local dashboard with live USB camera context
+                Ask me anything around you
               </h2>
             </div>
             <div className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#20a7db]/[0.12] bg-[#f4fbfe] p-1 max-[820px]:gap-0.5 max-[820px]:p-0.5">
@@ -983,7 +1010,7 @@ export default function DashboardPanel() {
             <div className="pointer-events-none absolute bottom-2 right-2 z-10 h-5 w-5 rounded-br-lg border-b-2 border-r-2 border-white/40" />
 
             <div className="absolute left-2 top-2 z-20 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white shadow-sm backdrop-blur-sm max-[820px]:left-1.5 max-[820px]:top-1.5 max-[820px]:px-1.5 max-[820px]:text-[9px]">
-              {cameraReady ? 'Live local stream' : checkingCamera ? 'Checking stream...' : 'Stream offline'}
+              {cameraReady ? 'Live' : checkingCamera ? 'Getting ready...' : 'Waiting to start'}
             </div>
 
             <img
@@ -1000,7 +1027,7 @@ export default function DashboardPanel() {
               onError={() => {
                 setCameraState('offline')
                 setCameraError('Camera stream is offline')
-                setCameraErrorDetail('The local Brain Pi camera service did not return a usable MJPEG stream.')
+                setCameraErrorDetail('The live view could not start. Please retry the camera.')
               }}
             />
 
@@ -1013,29 +1040,29 @@ export default function DashboardPanel() {
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7fd4ef] max-[820px]:text-[8px] max-[820px]:tracking-[0.18em]">
-                        Local camera
+                        Get started
                       </p>
                       <h3 className="mt-2 text-xl font-semibold tracking-tight max-[820px]:mt-1.5 max-[820px]:text-lg">
-                        Waiting for the Brain Pi camera stream.
+                        Getting the live view ready.
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-white/75 max-[820px]:text-xs max-[820px]:leading-5">
-                        This dashboard expects the local `camera.py` service to expose `/camera/stream` and `/api/camera/frame`. Once it is running, the preview will appear automatically.
+                        Once the camera is ready, you can speak naturally and get answers out loud as you explore.
                       </p>
                     </div>
                   </div>
 
                   <div className="mt-4 grid gap-2.5 sm:grid-cols-3 max-[820px]:mt-3 max-[820px]:grid-cols-1">
                     <div className="rounded-2xl border border-white/10 bg-black/20 p-3 max-[820px]:rounded-[18px] max-[820px]:p-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef] max-[820px]:text-[8px]">Camera</p>
-                      <p className="mt-2 text-xs leading-5 text-white/70 max-[820px]:mt-1 max-[820px]:leading-4">USB camera feed served locally at 30fps by Brain Pi.</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef] max-[820px]:text-[8px]">Live view</p>
+                      <p className="mt-2 text-xs leading-5 text-white/70 max-[820px]:mt-1 max-[820px]:leading-4">See the area around you while you chat with Triage.</p>
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-black/20 p-3 max-[820px]:rounded-[18px] max-[820px]:p-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef] max-[820px]:text-[8px]">STT</p>
-                      <p className="mt-2 text-xs leading-5 text-white/70 max-[820px]:mt-1 max-[820px]:leading-4">Free English browser speech recognition after one Chrome mic permission prompt.</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef] max-[820px]:text-[8px]">Voice input</p>
+                      <p className="mt-2 text-xs leading-5 text-white/70 max-[820px]:mt-1 max-[820px]:leading-4">Ask questions naturally and keep the conversation moving.</p>
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-black/20 p-3 max-[820px]:rounded-[18px] max-[820px]:p-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef] max-[820px]:text-[8px]">TTS</p>
-                      <p className="mt-2 text-xs leading-5 text-white/70 max-[820px]:mt-1 max-[820px]:leading-4">Human English voice playback for clean Gemma 4 responses only.</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7fd4ef] max-[820px]:text-[8px]">Spoken replies</p>
+                      <p className="mt-2 text-xs leading-5 text-white/70 max-[820px]:mt-1 max-[820px]:leading-4">Hear answers out loud while you stay focused on the moment.</p>
                     </div>
                   </div>
 
@@ -1059,7 +1086,7 @@ export default function DashboardPanel() {
                       disabled={checkingCamera}
                       className="h-10 bg-[#20a7db] px-5 text-xs shadow-sm shadow-[#20a7db]/25 hover:bg-[#1b96c5] disabled:opacity-60 max-[820px]:h-9 max-[820px]:px-4"
                     >
-                      {checkingCamera ? 'Checking stream...' : 'Retry local camera'}
+                      {checkingCamera ? 'Checking stream...' : 'Retry camera'}
                     </Button>
                     <Button
                       onClick={handleMicrophoneButton}
@@ -1081,10 +1108,10 @@ export default function DashboardPanel() {
                       micEnabled ? 'bg-[#20a7db]/85 text-white' : 'bg-black/55 text-white/80'
                     }`}
                   >
-                    {micEnabled ? 'English STT live' : 'English STT paused'}
+                    {micEnabled ? 'Voice live' : 'Voice paused'}
                   </div>
                   <div className="rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white/80 shadow-sm backdrop-blur-sm max-[820px]:px-1.5 max-[820px]:text-[9px]">
-                    Gemma 4 + human English TTS
+                    Replies out loud
                   </div>
                 </div>
 
@@ -1093,7 +1120,7 @@ export default function DashboardPanel() {
                     <div className="mx-auto max-w-[420px] rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-center backdrop-blur-sm max-[820px]:max-w-[320px] max-[820px]:rounded-[18px] max-[820px]:px-3 max-[820px]:py-2.5">
                       <p className="text-sm font-semibold text-white max-[820px]:text-xs">Microphone is paused.</p>
                       <p className="mt-1 text-xs leading-5 text-white/70 max-[820px]:leading-4">
-                        Tap the mic button once to resume free English speech recognition in Chrome.
+                        Tap the mic button to start talking again.
                       </p>
                     </div>
                   </div>
@@ -1105,7 +1132,7 @@ export default function DashboardPanel() {
               <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/35 backdrop-blur-sm">
                 <div className="rounded-2xl bg-white/90 px-6 py-4 text-center shadow-lg backdrop-blur max-[820px]:px-5 max-[820px]:py-3">
                   <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#20a7db] max-[820px]:h-6 max-[820px]:w-6" />
-                  <p className="mt-2 text-xs font-semibold text-slate-900">Analyzing with Gemma 4...</p>
+                  <p className="mt-2 text-xs font-semibold text-slate-900">Preparing your answer...</p>
                 </div>
               </div>
             )}
@@ -1141,9 +1168,9 @@ export default function DashboardPanel() {
               </div>
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#20a7db] max-[820px]:text-[8px] max-[820px]:tracking-[0.18em]">
-                  Assistant stack
+                  Trip tools
                 </p>
-                <p className="text-xs font-semibold text-slate-800 max-[820px]:text-[11px]">Brain Pi stream + Gemma 4 replies</p>
+                <p className="text-xs font-semibold text-slate-800 max-[820px]:text-[11px]">Live help + itinerary planning</p>
               </div>
             </div>
           </div>
@@ -1172,7 +1199,7 @@ export default function DashboardPanel() {
               <div className="flex items-center gap-2">
                 {micPermissionGranted ? <Mic className="h-3.5 w-3.5 text-[#20a7db]" /> : <MicOff className="h-3.5 w-3.5 text-slate-400" />}
                 <p className="text-[10px] font-semibold text-slate-800 max-[820px]:text-[9px]">
-                  {micPermissionGranted ? 'English STT ready' : 'Mic permission needed'}
+                  {micPermissionGranted ? 'Voice ready' : 'Mic needed'}
                 </p>
               </div>
             </div>

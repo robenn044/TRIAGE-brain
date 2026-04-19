@@ -226,9 +226,93 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Failed to generate itinerary. Please try again.'
 }
 
+function extractFirstJsonObject(text: string) {
+  const normalized = text
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim()
+
+  let depth = 0
+  let start = -1
+  let inString = false
+  let escaped = false
+
+  for (let index = 0; index < normalized.length; index += 1) {
+    const char = normalized[index]
+
+    if (inString) {
+      if (escaped) {
+        escaped = false
+        continue
+      }
+
+      if (char === '\\') {
+        escaped = true
+        continue
+      }
+
+      if (char === '"') {
+        inString = false
+      }
+
+      continue
+    }
+
+    if (char === '"') {
+      inString = true
+      continue
+    }
+
+    if (char === '{') {
+      if (depth === 0) {
+        start = index
+      }
+      depth += 1
+      continue
+    }
+
+    if (char === '}') {
+      depth -= 1
+      if (depth === 0 && start >= 0) {
+        return normalized.slice(start, index + 1)
+      }
+    }
+  }
+
+  return null
+}
+
+function normalizeItineraryData(raw: unknown): ItineraryData {
+  const value = (raw && typeof raw === 'object' ? raw : {}) as Partial<ItineraryData>
+  const days = Array.isArray(value.days) ? value.days : []
+  const tips = Array.isArray(value.tips) ? value.tips.filter(Boolean) : []
+  const mustEat = Array.isArray(value.must_eat) ? value.must_eat.filter(Boolean) : []
+
+  if (!days.length) {
+    throw new Error('The itinerary response did not include any day plans.')
+  }
+
+  return {
+    title: typeof value.title === 'string' && value.title.trim() ? value.title.trim() : 'Your Albania itinerary',
+    summary: typeof value.summary === 'string' ? value.summary.trim() : '',
+    days: days.map((day, index) => {
+      const item = (day && typeof day === 'object' ? day : {}) as Partial<ItineraryDay>
+      return {
+        day: typeof item.day === 'string' && item.day.trim() ? item.day.trim() : `Day ${index + 1}`,
+        theme: typeof item.theme === 'string' ? item.theme.trim() : 'Highlights',
+        morning: typeof item.morning === 'string' ? item.morning.trim() : 'Free time',
+        afternoon: typeof item.afternoon === 'string' ? item.afternoon.trim() : 'Free time',
+        evening: typeof item.evening === 'string' ? item.evening.trim() : 'Free time',
+      }
+    }),
+    tips: tips.map(tip => String(tip).trim()).filter(Boolean),
+    must_eat: mustEat.map(item => String(item).trim()).filter(Boolean),
+  }
+}
+
 async function generateItinerary(answers: Record<string, string | string[]>): Promise<ItineraryData> {
   const interests = Array.isArray(answers.interests) ? answers.interests.join(', ') : answers.interests
-  const prompt = `Generate a complete travel itinerary. Return ONLY valid JSON, no markdown fences, no explanation.
+  const prompt = `Generate a complete travel itinerary. Return ONLY one valid JSON object. No markdown fences, no explanation, no extra text before or after the JSON.
 
 Trip details:
 - City: ${answers.city}
@@ -256,12 +340,17 @@ JSON format (exactly this structure):
 }`
   const res = await fetch('/api/ask', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: null, prompt, max_tokens: 2000 }),
+    body: JSON.stringify({ image: null, prompt, max_tokens: 1600, response_mode: 'json' }),
   })
   if (!res.ok) throw new Error(`API error ${res.status}`)
   const data = await res.json()
-  const cleaned = (data.answer || '').replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-  return JSON.parse(cleaned) as ItineraryData
+  const rawAnswer = typeof data.answer === 'string' ? data.answer : ''
+  const jsonBlock = extractFirstJsonObject(rawAnswer)
+  if (!jsonBlock) {
+    throw new Error('The itinerary service returned text instead of valid JSON.')
+  }
+
+  return normalizeItineraryData(JSON.parse(jsonBlock))
 }
 
 export default function Itinerary() {
@@ -327,7 +416,7 @@ export default function Itinerary() {
   const handleStartOver = () => { setCurrentStep(0); setAnswers({}); setMultiSelect([]); setTextInput(''); setGenerating(false); setDone(false); setItinerary(null); setItineraryError(null); setActiveDay(0); setDisplayPlaces([]) }
 
   useEffect(() => {
-    const TIMEOUT = 45_000; let timer: ReturnType<typeof setTimeout>
+    const TIMEOUT = 60_000; let timer: ReturnType<typeof setTimeout>
     const reset = () => { clearTimeout(timer); timer = setTimeout(() => { sessionStorage.setItem('lockReturnPath', '/itinerary'); navigate('/') }, TIMEOUT) }
     const events = ['mousemove','mousedown','keydown','touchstart','scroll'] as const
     events.forEach(e => window.addEventListener(e, reset, { passive: true })); reset()

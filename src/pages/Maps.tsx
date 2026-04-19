@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import TriageMark from '@/components/TriageMark'
 import EndTripButton from '@/components/EndTripButton'
 
-const TIMEOUT = 45_000
+const TIMEOUT = 60_000
 
 export default function Maps() {
   const navigate = useNavigate()

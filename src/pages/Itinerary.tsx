@@ -337,12 +337,28 @@ JSON format (exactly this structure):
   ],
   "tips": ["practical tip 1", "practical tip 2", "practical tip 3"],
   "must_eat": ["local dish or restaurant 1", "local dish or restaurant 2", "local dish or restaurant 3"]
-}`
+}
+
+Rules:
+- Do not use "...", "[...]", "{...}", comments, placeholders, or trailing commas.
+- Return the full final JSON object with real string values in every field.
+- The "days" array must contain at least one fully written day object.`
   const res = await fetch('/api/ask', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ image: null, prompt, max_tokens: 1600, response_mode: 'json' }),
   })
-  if (!res.ok) throw new Error(`API error ${res.status}`)
+  if (!res.ok) {
+    const errorText = await res.text()
+    let parsedError = ''
+    try {
+      const errorData = JSON.parse(errorText) as { error?: string }
+      parsedError = errorData.error || ''
+    } catch {
+      // ignore invalid JSON error bodies
+    }
+
+    throw new Error(parsedError || errorText || `API error ${res.status}`)
+  }
   const data = await res.json()
   const rawAnswer = typeof data.answer === 'string' ? data.answer : ''
   const jsonBlock = extractFirstJsonObject(rawAnswer)

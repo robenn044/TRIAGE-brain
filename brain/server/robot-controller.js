@@ -5,9 +5,17 @@ const DEFAULT_BAUD_RATE = Number(process.env.TRIAGE_ROBOT_BAUD_RATE || 9600)
 const DEFAULT_PORT = process.env.TRIAGE_ROBOT_SERIAL_PORT || ''
 const HEARTBEAT_MS = Number(process.env.TRIAGE_ROBOT_HEARTBEAT_MS || 500)
 const COMMAND_BURST_MS = Number(process.env.TRIAGE_ROBOT_COMMAND_BURST_MS || 375)
+const CONNECT_SETTLE_MS = Number(process.env.TRIAGE_ROBOT_CONNECT_SETTLE_MS || 1200)
+const MODE_SWITCH_SETTLE_MS = Number(process.env.TRIAGE_ROBOT_MODE_SWITCH_SETTLE_MS || 220)
+const DIRECTION_SETTLE_MS = Number(process.env.TRIAGE_ROBOT_DIRECTION_SETTLE_MS || 160)
+const COMMAND_GUARD_MS = Number(process.env.TRIAGE_ROBOT_COMMAND_GUARD_MS || 100)
 
 function nowIso() {
   return new Date().toISOString()
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 function normalizeMode(mode) {
@@ -30,6 +38,17 @@ function normalizeCommand(command) {
   }
 
   return aliases[value] || 'STOP'
+}
+
+function isMovingCommand(command) {
+  return normalizeCommand(command) !== 'STOP'
+}
+
+function isRetryableSerialError(error) {
+  const message = error instanceof Error ? error.message : String(error || '')
+  return /(cannot open|no such file|enoent|port is not open|disconnected|input\/output error|resource busy|ebusy|eio)/i.test(
+    message,
+  )
 }
 
 function looksLikeArduino(portInfo) {
@@ -85,6 +104,7 @@ export class RobotController {
     this.manualStopTimer = null
     this.heartbeatTimer = null
     this.baudRate = DEFAULT_BAUD_RATE
+    this.lastDriveIssuedAt = 0
   }
 
   async listPorts() {
@@ -115,12 +135,20 @@ export class RobotController {
     })
   }
 
-  async getPreferredPortPath() {
-    if (this.portPath) {
-      return this.portPath
+  async getPreferredPortPath(requestedPath = null) {
+    const ports = await this.listPorts()
+    if (!ports.length) {
+      return null
     }
 
-    const ports = await this.listPorts()
+    const availablePaths = new Set(ports.map(port => port.path))
+    const candidates = [requestedPath, this.portPath, DEFAULT_PORT].filter(Boolean)
+    for (const candidate of candidates) {
+      if (availablePaths.has(candidate)) {
+        return candidate
+      }
+    }
+
     const preferred = ports.find(port => port.isRecommended) || ports[0]
     return preferred?.path || null
   }
@@ -137,7 +165,7 @@ export class RobotController {
       return this.getStatus()
     }
 
-    const portPath = normalizedRequestedPath || (await this.getPreferredPortPath())
+    const portPath = await this.getPreferredPortPath(normalizedRequestedPath)
     if (!portPath) {
       this.lastError = 'No Arduino serial port detected'
       throw new Error(this.lastError)
@@ -173,6 +201,7 @@ export class RobotController {
       })
     })
 
+    await delay(CONNECT_SETTLE_MS)
     await this.requestStatus()
     return this.getStatus()
   }
@@ -196,11 +225,16 @@ export class RobotController {
     port.on('error', error => {
       this.lastError = error.message
       this.connected = false
+      this.port = null
+      this.buffer = ''
       this.stopHeartbeat()
     })
 
     port.on('close', () => {
       this.connected = false
+      this.port = null
+      this.buffer = ''
+      this.drive = 'STOP'
       this.stopHeartbeat()
     })
   }
@@ -275,23 +309,51 @@ export class RobotController {
       await this.connect()
     }
 
-    await new Promise((resolve, reject) => {
-      this.port.write(`${line}\n`, error => {
-        if (error) {
-          reject(error)
-          return
-        }
-
-        this.port.drain(drainError => {
-          if (drainError) {
-            reject(drainError)
+    try {
+      await new Promise((resolve, reject) => {
+        this.port.write(`${line}\n`, error => {
+          if (error) {
+            reject(error)
             return
           }
 
-          resolve()
+          this.port.drain(drainError => {
+            if (drainError) {
+              reject(drainError)
+              return
+            }
+
+            resolve()
+          })
         })
       })
-    })
+    } catch (error) {
+      if (!isRetryableSerialError(error)) {
+        throw error
+      }
+
+      this.lastError = error.message
+      await this.disconnect({ preserveMode: true })
+      await this.connect(this.portPath)
+
+      await new Promise((resolve, reject) => {
+        this.port.write(`${line}\n`, retryError => {
+          if (retryError) {
+            reject(retryError)
+            return
+          }
+
+          this.port.drain(drainError => {
+            if (drainError) {
+              reject(drainError)
+              return
+            }
+
+            resolve()
+          })
+        })
+      })
+    }
 
     this.lastCommandAt = nowIso()
   }
@@ -334,9 +396,24 @@ export class RobotController {
       throw new Error('Mode must be LINE or AI')
     }
 
+    if (this.mode === targetMode && this.connected) {
+      await this.requestStatus()
+      return this.getStatus()
+    }
+
+    this.clearManualStopTimer()
+    if (this.connected && this.mode === 'ai') {
+      await this.writeLine('DRIVE STOP')
+      this.drive = 'STOP'
+      await delay(MODE_SWITCH_SETTLE_MS)
+    }
+
     await this.writeLine(`MODE ${targetMode.toUpperCase()}`)
     this.mode = targetMode
     this.drive = 'STOP'
+    this.lastDriveIssuedAt = Date.now()
+    await delay(MODE_SWITCH_SETTLE_MS)
+    await this.requestStatus()
 
     if (targetMode === 'ai') {
       this.startHeartbeat()
@@ -353,11 +430,26 @@ export class RobotController {
       throw new Error('Switch the robot to AI mode before sending drive commands')
     }
 
+    const now = Date.now()
+    if (this.lastDriveIssuedAt && now - this.lastDriveIssuedAt < COMMAND_GUARD_MS) {
+      await delay(COMMAND_GUARD_MS - (now - this.lastDriveIssuedAt))
+    }
+
     const isContinuous = options?.continuous === true
     const durationMs = options?.durationMs
+    const shouldSettleDirection =
+      isMovingCommand(normalized) && isMovingCommand(this.drive) && normalized !== this.drive
+
+    if (shouldSettleDirection) {
+      await this.writeLine('DRIVE STOP')
+      this.drive = 'STOP'
+      this.lastDriveIssuedAt = Date.now()
+      await delay(DIRECTION_SETTLE_MS)
+    }
 
     await this.writeLine(`DRIVE ${normalized}`)
     this.drive = normalized
+    this.lastDriveIssuedAt = Date.now()
     this.clearManualStopTimer()
 
     if (normalized !== 'STOP' && !isContinuous) {
@@ -374,8 +466,11 @@ export class RobotController {
 
   async stop() {
     this.clearManualStopTimer()
-    await this.writeLine('DRIVE STOP')
-    this.drive = 'STOP'
+    if (this.connected && this.mode === 'ai') {
+      await this.writeLine('DRIVE STOP')
+      this.drive = 'STOP'
+      this.lastDriveIssuedAt = Date.now()
+    }
     return this.getStatus()
   }
 

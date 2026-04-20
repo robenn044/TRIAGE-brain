@@ -45,12 +45,20 @@ export default function RobotControl() {
   const [selectedPort, setSelectedPort] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const statusRequestInFlightRef = useRef(false)
+  const selectedPortTouchedRef = useRef(false)
   const holdTimerRef = useRef<number | null>(null)
   const holdCommandRef = useRef<'FWD' | 'BACK' | 'LEFT' | 'RIGHT' | null>(null)
   const holdStartedRef = useRef(false)
   const suppressTapCommandRef = useRef<'FWD' | 'BACK' | 'LEFT' | 'RIGHT' | null>(null)
 
-  const fetchRobotStatus = useCallback(async () => {
+  const fetchRobotStatus = useCallback(async (options?: { force?: boolean }) => {
+    if (statusRequestInFlightRef.current && !options?.force) {
+      return
+    }
+
+    statusRequestInFlightRef.current = true
+
     try {
       const response = await fetch(ROBOT_STATUS_PATH, {
         headers: {
@@ -65,23 +73,33 @@ export default function RobotControl() {
       const data = await response.json()
       const nextStatus = (data.robot ?? null) as RobotStatus | null
       setRobotStatus(nextStatus)
-      setSelectedPort(currentValue => currentValue || nextStatus?.portPath || nextStatus?.availablePorts?.[0]?.path || '')
+      setSelectedPort(currentValue => {
+        if (selectedPortTouchedRef.current && currentValue) {
+          return currentValue
+        }
+
+        return currentValue || nextStatus?.portPath || nextStatus?.availablePorts?.[0]?.path || ''
+      })
       setError(nextStatus?.lastError ?? null)
     } catch (nextError) {
       setError(getErrorMessage(nextError))
+    } finally {
+      statusRequestInFlightRef.current = false
     }
   }, [])
 
   useEffect(() => {
     void fetchRobotStatus()
     const intervalId = window.setInterval(() => {
-      void fetchRobotStatus()
-    }, 2000)
+      if (!busy) {
+        void fetchRobotStatus()
+      }
+    }, 2500)
 
     return () => {
       window.clearInterval(intervalId)
     }
-  }, [fetchRobotStatus])
+  }, [busy, fetchRobotStatus])
 
   const callRobotEndpoint = useCallback(
     async (path: string, body?: Record<string, unknown>) => {
@@ -105,6 +123,10 @@ export default function RobotControl() {
         const nextStatus = (data.robot ?? null) as RobotStatus | null
         setRobotStatus(nextStatus)
         setError(nextStatus?.lastError ?? null)
+        if (nextStatus?.portPath) {
+          selectedPortTouchedRef.current = false
+          setSelectedPort(nextStatus.portPath)
+        }
       } catch (nextError) {
         setError(getErrorMessage(nextError))
       } finally {
@@ -252,7 +274,7 @@ export default function RobotControl() {
               <Link to="/dashboard">Back to dashboard</Link>
             </Button>
             <Button
-              onClick={() => void fetchRobotStatus()}
+              onClick={() => void fetchRobotStatus({ force: true })}
               variant="outline"
               className="h-10 border-[#20a7db]/20 bg-white px-3 text-xs sm:h-11 sm:px-4 sm:text-sm"
             >
@@ -282,7 +304,10 @@ export default function RobotControl() {
                 <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Serial port</span>
                 <select
                   value={selectedPort}
-                  onChange={event => setSelectedPort(event.target.value)}
+                  onChange={event => {
+                    selectedPortTouchedRef.current = true
+                    setSelectedPort(event.target.value)
+                  }}
                   className="h-12 w-full rounded-2xl border border-[#20a7db]/15 bg-[#f8fcfe] px-4 text-sm text-slate-900 outline-none ring-0 transition focus:border-[#20a7db]"
                 >
                   <option value="">Auto-detect Arduino</option>

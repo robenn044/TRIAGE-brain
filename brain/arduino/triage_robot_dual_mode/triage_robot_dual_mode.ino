@@ -18,9 +18,9 @@
 #define TRIG 9
 #define ECHO 10
 
-// --- SETTINGS (line mode slightly calmer, AI mode keeps its own speeds) ---
+// --- SETTINGS (line mode calmer forward speed, full-strength turning) ---
 int spd = 185;
-int turnSpd = 235;
+int turnSpd = 255;
 int aiForwardSpd = 255;
 int aiReverseSpd = 200;
 int aiTurnSpd = 255;

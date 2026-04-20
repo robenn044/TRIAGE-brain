@@ -18,10 +18,12 @@
 #define TRIG 9
 #define ECHO 10
 
-// --- SETTINGS (line follower stays original, AI forward gets full speed) ---
-int spd = 200;
-int turnSpd = 255;
+// --- SETTINGS (line mode slightly calmer, AI mode keeps its own speeds) ---
+int spd = 185;
+int turnSpd = 235;
 int aiForwardSpd = 255;
+int aiReverseSpd = 200;
+int aiTurnSpd = 255;
 
 enum RobotMode {
   MODE_LINE,
@@ -171,19 +173,19 @@ void executeAiDrive(String driveCommand) {
 
   if (driveCommand == "BACK") {
     aiDrive = "BACK";
-    backward();
+    aiBackward();
     return;
   }
 
   if (driveCommand == "LEFT") {
     aiDrive = "LEFT";
-    turnLeft();
+    aiTurnLeft();
     return;
   }
 
   if (driveCommand == "RIGHT") {
     aiDrive = "RIGHT";
-    turnRight();
+    aiTurnRight();
     return;
   }
 
@@ -249,6 +251,36 @@ void aiForward() {
   digitalWrite(in3, HIGH);
   digitalWrite(in4, LOW);
   analogWrite(enB, aiForwardSpd);
+}
+
+void aiBackward() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  analogWrite(enA, aiReverseSpd);
+
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+  analogWrite(enB, aiReverseSpd);
+}
+
+void aiTurnRight() {
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  analogWrite(enA, aiTurnSpd);
+
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+  analogWrite(enB, aiTurnSpd);
+}
+
+void aiTurnLeft() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  analogWrite(enA, aiTurnSpd);
+
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+  analogWrite(enB, aiTurnSpd);
 }
 
 void backward() {
